@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const GOAL_SHEET_STATUS = ["DRAFT", "SUBMITTED", "RETURNED", "LOCKED"];
 
@@ -20,4 +20,4 @@ const goalSheetSchema = new mongoose.Schema(
 
 goalSheetSchema.index({ employeeId: 1, year: 1 }, { unique: true });
 
-module.exports = mongoose.model("GoalSheet", goalSheetSchema);
+export default mongoose.model("GoalSheet", goalSheetSchema);

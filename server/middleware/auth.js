@@ -1,8 +1,7 @@
-// middleware/requireAuth.js
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-module.exports = async function requireAuth(req, res, next) {
+export const requireAuth = async (req, res, next) => {
   try {
     const header = req.headers.authorization;
     const bearerToken =

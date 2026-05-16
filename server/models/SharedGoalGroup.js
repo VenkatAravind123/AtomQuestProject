@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const sharedGoalGroupSchema = new mongoose.Schema(
   {
@@ -11,4 +11,4 @@ const sharedGoalGroupSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("SharedGoalGroup", sharedGoalGroupSchema);
+export default mongoose.model("SharedGoalGroup", sharedGoalGroupSchema);

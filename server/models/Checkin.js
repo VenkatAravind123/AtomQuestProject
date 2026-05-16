@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-
+import mongoose from "mongoose"
 const PHASES = ["Q1", "Q2", "Q3", "Q4"];
 
 const checkinSchema = new mongoose.Schema(
@@ -15,4 +14,4 @@ const checkinSchema = new mongoose.Schema(
 
 checkinSchema.index({ employeeId: 1, phase: 1 }, { unique: true });
 
-module.exports = mongoose.model("Checkin", checkinSchema);
+export default mongoose.model("Checkin", checkinSchema);

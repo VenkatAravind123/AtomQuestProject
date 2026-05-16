@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const UOM_TYPES = ["MIN", "MAX", "TIMELINE", "ZERO"];
 const SHARED_ROLE = ["PRIMARY", "RECIPIENT"];
@@ -51,4 +51,4 @@ goalSchema.pre("validate", function (next) {
   next();
 });
 
-module.exports = mongoose.model("Goal", goalSchema);
+export default mongoose.model("Goal", goalSchema);

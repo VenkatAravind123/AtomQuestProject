@@ -1,6 +1,6 @@
-const bcrypt = require("bcryptjs");
-const { z } = require("zod");
-const User = require("../models/User");
+import bcrypt from "bcryptjs";
+import { z } from "zod";
+import User from "../models/User.js";
 
 const roles = ["EMPLOYEE", "MANAGER", "ADMIN"];
 
@@ -20,7 +20,7 @@ const createUserSchema = z.object({
   department: z.string().optional().nullable(),
 });
 
-exports.bootstrapAdmin = async (req, res) => {
+export const bootstrapAdmin = async (req, res) => {
   // Allow only if no ADMIN exists yet
   const adminCount = await User.countDocuments({ role: "ADMIN" });
   if (adminCount > 0) {
@@ -54,7 +54,7 @@ exports.bootstrapAdmin = async (req, res) => {
   });
 };
 
-exports.createUser = async (req, res) => {
+export const createUser = async (req, res) => {
   const parsed = createUserSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ message: "Invalid input", details: parsed.error.flatten() });
@@ -64,11 +64,6 @@ exports.createUser = async (req, res) => {
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) return res.status(409).json({ message: "Email already exists" });
-
-  // Optional: enforce that EMPLOYEE must have managerId
-  // if (role === "EMPLOYEE" && !managerId) {
-  //   return res.status(400).json({ message: "managerId is required for EMPLOYEE" });
-  // }
 
   const passwordHash = await bcrypt.hash(password, 10);
 

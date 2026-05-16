@@ -1,22 +1,23 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 
-// Routes (create these files under server/routes/)
-const authRoutes = require("./routes/authRoutes.js");
-const employeeRoutes = require("./routes/employeeRoutes.js");
-const managerRoutes = require("./routes/managerRoutes.js");
-const adminRoutes = require("./routes/adminRoutes.js");
-const reportsRoutes = require("./routes/reportsRoutes.js");
+import authRoutes from "./routes/authRoutes.js";
+import employeeRoutes from "./routes/employeeRoutes.js";
+import managerRoutes from "./routes/managerRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import reportsRoutes from "./routes/reportsRoutes.js";
+
+dotenv.config();
 
 const app = express();
 
 // to parse JSON data
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:5174",
+    origin: process.env.ORIGIN || "http://localhost:5174",
     credentials: true,
   })
 );
@@ -48,28 +49,17 @@ app.use((req, res) => {
 // Basic error handler
 app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
-    message: err.message || "Internal Server Error",
-    details: err.details || undefined,
+    message: err.message,
   });
 });
 
-const port = process.env.PORT || 5000;
-
-const dburl = process.env.MONGO_DB_URL || process.env.MONGODB_URI;
-if (!dburl) {
-  console.error("Missing MONGO_DB_URL (or MONGODB_URI) in .env");
-  process.exit(1);
-}
-
+// Connect to MongoDB
 mongoose
-  .connect(dburl)
-  .then(() => {
-    console.log("Connected to DB Successfully");
-    app.listen(port, () => {
-      console.log(`Server is running at port ${port}`);
-    });
-  })
-  .catch((err) => {
-    console.log(err.message);
-    process.exit(1);
-  });
+  .connect(process.env.MONGO_DB_URL)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

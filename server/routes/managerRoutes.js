@@ -1,8 +1,8 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
 router.get("/ping", (req, res) => {
   res.json({ ok: true, route: "manager" });
 });
 
-module.exports = router;
+export default router;

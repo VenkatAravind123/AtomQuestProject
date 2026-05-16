@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const ENTITY_TYPES = ["GOAL", "GOAL_SHEET", "CYCLE", "SHARED_GOAL", "GOAL_UPDATE", "CHECKIN"];
 
@@ -18,4 +18,4 @@ const auditLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("AuditLog", auditLogSchema);
+export default mongoose.model("AuditLog", auditLogSchema);

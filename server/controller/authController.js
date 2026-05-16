@@ -1,7 +1,6 @@
-// controller/authController.js
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 function signToken(user) {
   if (!process.env.JWT_SECRET) throw new Error("Missing JWT_SECRET");
@@ -10,7 +9,7 @@ function signToken(user) {
   });
 }
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email: String(email).toLowerCase().trim() });
@@ -20,26 +19,21 @@ exports.login = async (req, res) => {
   if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
   const token = signToken(user);
-
-  // cookie for browser
   res.cookie("token", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false, // set true only on https
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  return res.json({
-    token, // also return for Postman usage
-    user: { id: user._id, name: user.name, email: user.email, role: user.role },
-  });
+  res.json({ token, user });
 };
 
-exports.me = async (req, res) => {
-  return res.json({ user: req.user });
+export const me = async (req, res) => {
+  res.json(req.user);
 };
 
-exports.logout = async (req, res) => {
+export const logout = (req, res) => {
   res.clearCookie("token");
-  return res.json({ ok: true });
+  res.json({ message: "Logged out" });
 };
