@@ -13,6 +13,7 @@ import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminCycles from "./pages/AdminCycles.jsx";
 import AdminSharedGoals from "./pages/AdminSharedGoals.jsx";
 import AdminReports from "./pages/AdminReports.jsx";
+import Home from "./pages/Home.jsx";
 import "./App.css";
 
 export default function App() {
@@ -22,7 +23,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
 
         {/* Protected routes with sidebar */}
-        <Route
+        {/* <Route
           path="/"
           element={
             <ProtectedRoute>
@@ -31,7 +32,8 @@ export default function App() {
               </Layout>
             </ProtectedRoute>
           }
-        />
+        /> */}
+        <Route path="/" element={<Home />} />
 
         <Route
           path="/dashboard"
