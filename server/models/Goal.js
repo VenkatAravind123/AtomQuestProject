@@ -19,36 +19,32 @@ const goalSchema = new mongoose.Schema(
 
     weightage: { type: Number, required: true, min: 0, max: 100 },
 
+    // Shared goal tracking
     sharedGroupId: { type: mongoose.Schema.Types.ObjectId, ref: "SharedGoalGroup", default: null, index: true },
     sharedRole: { type: String, enum: SHARED_ROLE, default: null },
+    baseWeightage: { type: Number, default: null }, // Original weightage from shared goal group
+    adjustedWeightage: { type: Number, default: null }, // Employee's adjusted weightage (only for recipients)
+    syncedAchievement: { type: Number, default: null }, // Achievement synced from primary owner
+    isSyncedFromPrimary: { type: Boolean, default: false }, // Flag to track synced values
   },
   { timestamps: true }
 );
 
-goalSchema.pre("validate", function (next) {
+// Simple validation - TIMELINE requires targetDate
+goalSchema.pre("validate", function () {
   const isTimeline = this.uomType === "TIMELINE";
   const isZero = this.uomType === "ZERO";
-  const isMinMax = this.uomType === "MIN" || this.uomType === "MAX";
 
-  if (isTimeline) {
-    if (!this.targetDate) return next(new Error("targetDate is required for TIMELINE goals"));
-  }
-
-  if (isMinMax) {
-    if (typeof this.targetValue !== "number") return next(new Error("targetValue is required for MIN/MAX goals"));
-    if (this.targetValue <= 0) return next(new Error("targetValue must be > 0 for MIN/MAX goals"));
-  }
-
+  // ZERO type doesn't need target values
   if (isZero) {
     this.targetValue = null;
     this.targetDate = null;
   }
 
-  if (this.sharedGroupId && !this.sharedRole) {
-    return next(new Error("sharedRole is required when sharedGroupId is set"));
+  // TIMELINE requires targetDate
+  if (isTimeline && !this.targetDate) {
+    throw new Error("targetDate is required for TIMELINE goals");
   }
-
-  next();
 });
 
 export default mongoose.model("Goal", goalSchema);

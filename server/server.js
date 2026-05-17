@@ -9,6 +9,7 @@ import employeeRoutes from "./routes/employeeRoutes.js";
 import managerRoutes from "./routes/managerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import reportsRoutes from "./routes/reportsRoutes.js";
+import cyclesRoutes from "./routes/cyclesRoutes.js";
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ const app = express();
 // to parse JSON data
 app.use(
   cors({
-    origin: process.env.ORIGIN || "http://localhost:5174",
+    origin: process.env.ORIGIN || "http://localhost:5173",
     credentials: true,
   })
 );
@@ -40,6 +41,7 @@ app.use("/api/employee", employeeRoutes);
 app.use("/api/manager", managerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/reports", reportsRoutes);
+app.use("/api/admin/cycles", cyclesRoutes);
 
 // 404 fallback
 app.use((req, res) => {

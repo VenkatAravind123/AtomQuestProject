@@ -1,8 +1,27 @@
 import express from "express";
-const router = express.Router();
+import { requireAuth } from "../middleware/auth.js";
+import { requireRole } from "../middleware/requireRole.js";
+import {
+  getPendingApprovals,
+  approveGoalSheet,
+  rejectGoalSheet,
+  createCheckin,
+  getTeamCheckins,
+  getGoalCheckins,
+} from "../controller/managerController.js";
 
-router.get("/ping", (req, res) => {
-  res.json({ ok: true, route: "manager" });
-});
+const router = express.Router();
+router.use(requireAuth);
+router.use(requireRole("MANAGER"));
+
+// Approvals
+router.get("/pending-approvals", getPendingApprovals);
+router.post("/approve/:sheetId", approveGoalSheet);
+router.post("/reject/:sheetId", rejectGoalSheet);
+
+// Check-ins
+router.post("/checkins", createCheckin);
+router.get("/checkins", getTeamCheckins);
+router.get("/goals/:goalId/checkins", getGoalCheckins);
 
 export default router;

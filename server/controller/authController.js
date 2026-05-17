@@ -30,7 +30,7 @@ export const login = async (req, res) => {
 };
 
 export const me = async (req, res) => {
-  res.json(req.user);
+  res.json({ user: req.user });
 };
 
 export const logout = (req, res) => {

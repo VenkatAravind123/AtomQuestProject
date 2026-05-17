@@ -1,24 +1,10 @@
 import bcrypt from "bcryptjs";
-import { z } from "zod";
 import User from "../models/User.js";
 
 const roles = ["EMPLOYEE", "MANAGER", "ADMIN"];
 
-const bootstrapSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  department: z.string().optional().nullable(),
-});
 
-const createUserSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(roles),
-  managerId: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-});
+
 
 export const bootstrapAdmin = async (req, res) => {
   // Allow only if no ADMIN exists yet
@@ -27,12 +13,12 @@ export const bootstrapAdmin = async (req, res) => {
     return res.status(403).json({ message: "Admin already exists. Bootstrap disabled." });
   }
 
-  const parsed = bootstrapSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ message: "Invalid input", details: parsed.error.flatten() });
-  }
+const { name, email, password, department } = req.body;
 
-  const { name, email, password, department } = parsed.data;
+// Basic checks
+if (!name || !email || !password) {
+  return res.status(400).json({ message: "name, email, password required" });
+}
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) return res.status(409).json({ message: "Email already exists" });
@@ -55,12 +41,12 @@ export const bootstrapAdmin = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  const parsed = createUserSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ message: "Invalid input", details: parsed.error.flatten() });
-  }
+  const { name, email, password, role, managerId, department } = req.body;
 
-  const { name, email, password, role, managerId, department } = parsed.data;
+// Basic checks
+if (!name || !email || !password || !role) {
+  return res.status(400).json({ message: "name, email, password, role required" });
+}
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) return res.status(409).json({ message: "Email already exists" });
@@ -80,4 +66,13 @@ export const createUser = async (req, res) => {
     message: "User created",
     user: { id: user._id, name: user.name, email: user.email, role: user.role, managerId: user.managerId },
   });
+};
+
+export const getManagers = async (req, res) => {
+  try {
+    const managers = await User.find({ role: "MANAGER" }).select("_id name email");
+    res.json(managers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

@@ -1,28 +1,8 @@
 import GoalSheet from "../models/GoalSheet.js";
 import Goal from "../models/Goal.js";
 import User from "../models/User.js";
-import { z } from "zod";
 
-const goalSchema = z.object({
-  goalSheetId: z.string().min(1),
-  thrustArea: z.string().min(2),
-  title: z.string().min(3),
-  description: z.string().optional(),
-  uomType: z.enum(["MIN", "MAX", "TIMELINE", "ZERO"]),
-  targetValue: z.number().positive(),
-  targetDate: z.string().optional(),
-  weightage: z.number().min(1).max(100),
-});
-
-const updateGoalSchema = z.object({
-  thrustArea: z.string().min(2).optional(),
-  title: z.string().min(3).optional(),
-  description: z.string().optional(),
-  uomType: z.enum(["MIN", "MAX", "TIMELINE", "ZERO"]).optional(),
-  targetValue: z.number().positive().optional(),
-  targetDate: z.string().optional(),
-  weightage: z.number().min(1).max(100).optional(),
-});
+import GoalUpdate from "../models/GoalUpdate.js";
 
 // Get or create goal sheet for current year
 export const getGoalSheet = async (req, res) => {
@@ -55,22 +35,21 @@ export const getGoalSheet = async (req, res) => {
 // Create a new goal
 export const createGoal = async (req, res) => {
   try {
-    const parsed = goalSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid input", details: parsed.error.flatten() });
-    }
+    const { goalSheetId, thrustArea, title, description, uomType, targetValue, targetDate, weightage } = req.body;
 
-    const { goalSheetId, thrustArea, title, description, uomType, targetValue, targetDate, weightage } = parsed.data;
+    // Basic existence checks
+    if (!goalSheetId) return res.status(400).json({ message: "goalSheetId is required" });
+    if (!title) return res.status(400).json({ message: "title is required" });
+    if (!uomType) return res.status(400).json({ message: "uomType is required" });
+    if (!weightage) return res.status(400).json({ message: "weightage is required" });
 
     const sheet = await GoalSheet.findById(goalSheetId);
     if (!sheet) return res.status(404).json({ message: "Goal sheet not found" });
 
-    // Check if sheet is DRAFT (can only add to draft)
     if (sheet.status !== "DRAFT") {
       return res.status(400).json({ message: "Can only edit draft goal sheets" });
     }
 
-    // Check if adding this goal would exceed 8 goals
     const goalCount = await Goal.countDocuments({ goalSheetId });
     if (goalCount >= 8) {
       return res.status(400).json({ message: "Maximum 8 goals allowed" });
@@ -81,15 +60,16 @@ export const createGoal = async (req, res) => {
       employeeId: sheet.employeeId,
       thrustArea,
       title,
-      description: description || null,
+      description: description || "",
       uomType,
-      targetValue,
+      targetValue: targetValue || null,
       targetDate: targetDate || null,
       weightage,
     });
 
     res.status(201).json(goal);
   } catch (err) {
+    console.error("Error creating goal:", err.message);
     res.status(500).json({ message: err.message });
   }
 };
@@ -98,11 +78,7 @@ export const createGoal = async (req, res) => {
 export const updateGoal = async (req, res) => {
   try {
     const { goalId } = req.params;
-
-    const parsed = updateGoalSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid input", details: parsed.error.flatten() });
-    }
+    const { thrustArea, title, description, uomType, targetValue, targetDate, weightage } = req.body;
 
     const goal = await Goal.findById(goalId);
     if (!goal) return res.status(404).json({ message: "Goal not found" });
@@ -112,14 +88,13 @@ export const updateGoal = async (req, res) => {
       return res.status(400).json({ message: "Can only edit draft goal sheets" });
     }
 
-    // Update fields
-    if (parsed.data.thrustArea) goal.thrustArea = parsed.data.thrustArea;
-    if (parsed.data.title) goal.title = parsed.data.title;
-    if (parsed.data.description !== undefined) goal.description = parsed.data.description;
-    if (parsed.data.uomType) goal.uomType = parsed.data.uomType;
-    if (parsed.data.targetValue) goal.targetValue = parsed.data.targetValue;
-    if (parsed.data.targetDate !== undefined) goal.targetDate = parsed.data.targetDate;
-    if (parsed.data.weightage !== undefined) goal.weightage = parsed.data.weightage;
+    if (thrustArea) goal.thrustArea = thrustArea;
+    if (title) goal.title = title;
+    if (description !== undefined) goal.description = description;
+    if (uomType) goal.uomType = uomType;
+    if (targetValue) goal.targetValue = targetValue;
+    if (targetDate !== undefined) goal.targetDate = targetDate;
+    if (weightage !== undefined) goal.weightage = weightage;
 
     await goal.save();
     res.json(goal);
@@ -166,23 +141,19 @@ export const submitGoalSheet = async (req, res) => {
 
     const goals = await Goal.find({ goalSheetId });
 
-    // Validation 1: at least 1 goal
     if (goals.length === 0) {
       return res.status(400).json({ message: "Add at least 1 goal before submitting" });
     }
 
-    // Validation 2: max 8 goals
     if (goals.length > 8) {
       return res.status(400).json({ message: "Maximum 8 goals allowed" });
     }
 
-    // Validation 3: each goal >= 10%
     const invalidGoals = goals.filter((g) => g.weightage < 10);
     if (invalidGoals.length > 0) {
       return res.status(400).json({ message: "Each goal must be at least 10%" });
     }
 
-    // Validation 4: total = 100%
     const totalWeightage = goals.reduce((sum, g) => sum + g.weightage, 0);
     if (totalWeightage !== 100) {
       return res.status(400).json({ message: `Total weightage is ${totalWeightage}%, must be 100%` });
@@ -204,6 +175,117 @@ export const getManager = async (req, res) => {
     const manager = await User.findById(req.user.managerId).select("-passwordHash");
     if (!manager) return res.status(404).json({ message: "Manager not assigned" });
     res.json(manager);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+export const submitGoalUpdate = async (req, res) => {
+  try {
+    const { goalId, quarter, year, progressPercentage, comments, status } = req.body;
+    const employeeId = req.user._id;
+
+    // Validation
+    if (!goalId) return res.status(400).json({ message: "goalId is required" });
+    if (!quarter || !["Q1", "Q2", "Q3", "Q4"].includes(quarter)) {
+      return res.status(400).json({ message: "Invalid quarter (Q1-Q4)" });
+    }
+    if (!year) return res.status(400).json({ message: "year is required" });
+    if (progressPercentage === undefined || progressPercentage < 0 || progressPercentage > 100) {
+      return res.status(400).json({ message: "progressPercentage must be 0-100" });
+    }
+    if (!status || !["ON_TRACK", "AT_RISK", "DELAYED", "COMPLETED"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    // Verify goal exists and belongs to employee
+    const goal = await Goal.findById(goalId);
+    if (!goal) return res.status(404).json({ message: "Goal not found" });
+    if (goal.employeeId.toString() !== employeeId.toString()) {
+      return res.status(403).json({ message: "Unauthorized - goal doesn't belong to you" });
+    }
+
+    // Check if update already exists for this quarter
+    let update = await GoalUpdate.findOne({
+      goalId,
+      quarter,
+      year,
+    });
+
+    if (update) {
+      // Update existing
+      update.progressPercentage = progressPercentage;
+      update.comments = comments || "";
+      update.status = status;
+      update.submittedAt = new Date();
+      update.submittedBy = employeeId;
+    } else {
+      // Create new
+      update = await GoalUpdate.create({
+        goalId,
+        employeeId,
+        quarter,
+        year,
+        progressPercentage,
+        comments: comments || "",
+        status,
+        submittedAt: new Date(),
+        submittedBy: employeeId,
+      });
+    }
+
+    await update.save();
+    res.status(201).json({
+      message: "Goal update submitted",
+      update,
+    });
+  } catch (err) {
+    console.error("Error submitting goal update:", err.message);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get all updates for a goal
+export const getGoalUpdates = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const employeeId = req.user._id;
+
+    // Verify goal exists and belongs to employee
+    const goal = await Goal.findById(goalId);
+    if (!goal) return res.status(404).json({ message: "Goal not found" });
+    if (goal.employeeId.toString() !== employeeId.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const updates = await GoalUpdate.find({ goalId })
+      .sort({ quarter: 1, year: -1 });
+
+    res.json(updates);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get updates for all goals in a quarter
+export const getQuarterlyUpdates = async (req, res) => {
+  try {
+    const { quarter, year } = req.query;
+    const employeeId = req.user._id;
+
+    if (!quarter || !year) {
+      return res.status(400).json({ message: "quarter and year required" });
+    }
+
+    const updates = await GoalUpdate.find({
+      employeeId,
+      quarter,
+      year,
+    })
+      .populate("goalId", "title thrustArea weightage");
+
+    res.json(updates);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-const GOAL_SHEET_STATUS = ["DRAFT", "SUBMITTED", "RETURNED", "LOCKED"];
+const GOAL_SHEET_STATUS = ["DRAFT", "SUBMITTED", "APPROVED","REJECTED", "LOCKED"];
 
 const goalSheetSchema = new mongoose.Schema(
   {
@@ -9,11 +9,10 @@ const goalSheetSchema = new mongoose.Schema(
 
     status: { type: String, enum: GOAL_SHEET_STATUS, default: "DRAFT", index: true },
 
-    submittedAt: { type: Date, default: null },
-    approvedAt: { type: Date, default: null },
-    lockedAt: { type: Date, default: null },
-
-    returnedReason: { type: String, default: null, trim: true },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+approvedAt: { type: Date, default: null },
+rejectionReason: { type: String, default: null },
+submittedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
