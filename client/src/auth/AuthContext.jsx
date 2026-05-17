@@ -9,11 +9,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   async function me() {
-    const res = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
+  try {
+    const res = await fetch(`${API_URL}/api/auth/me`, { 
+      credentials: "include",
+      signal: AbortSignal.timeout(10000) // 10 sec timeout
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return data.user;
+  } catch (err) {
+    console.error("Session check failed:", err);
+    return null; // Let user stay on page, they can login again
   }
+}
 
   async function login(email, password) {
     const res = await fetch(`${API_URL}/api/auth/login`, {
