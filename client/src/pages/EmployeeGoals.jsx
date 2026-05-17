@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import config from "../config.js";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = config.API_URL;
 
 const THRUST_AREAS = ["Leadership", "Technical Excellence", "Customer Focus", "Innovation", "Team Building"];
 const UOM_TYPES = ["MIN", "MAX", "TIMELINE", "ZERO"];

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import config from "../config.js";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = config.API_URL;
 const PHASES = ["GOAL_SETTING", "Q1", "Q2", "Q3", "Q4"];
 
 export default function AdminCycles() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import config from "../config.js";
+const API_URL = config.API_URL;
 const ROLES = ["EMPLOYEE", "MANAGER", "ADMIN"];
 const UOM_TYPES = ["MIN", "MAX", "TIMELINE", "ZERO"];
 const THRUST_AREAS = ["Customer Focus", "Innovation", "Leadership", "Team Building", "Operational Excellence"];

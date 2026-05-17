@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
+import config from "../config.js";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = config.API_URL;
 
 const QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
 const STATUSES = ["ON_TRACK", "AT_RISK", "DELAYED", "COMPLETED"];
