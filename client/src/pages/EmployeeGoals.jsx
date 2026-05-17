@@ -13,6 +13,8 @@ export default function EmployeeGoals() {
   const [success, setSuccess] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [adjustingWeightage, setAdjustingWeightage] = useState(null);
+  const [adjustValues, setAdjustValues] = useState({});
 
   const [formData, setFormData] = useState({
     thrustArea: THRUST_AREAS[0],
@@ -23,18 +25,20 @@ export default function EmployeeGoals() {
     targetDate: "",
     weightage: "",
   });
+  const currentYear = new Date().getFullYear();
+const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const [touched, setTouched] = useState({});
 
   // Fetch goal sheet on mount
   useEffect(() => {
     fetchGoalSheet();
-  }, []);
+  }, [selectedYear]);
 
   async function fetchGoalSheet() {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/api/employee/goals/sheet`, {
+      const res = await fetch(`${API_URL}/api/employee/goals/sheet?year=${selectedYear}`, {
         credentials: "include",
       });
 
@@ -43,6 +47,16 @@ export default function EmployeeGoals() {
       const data = await res.json();
       setSheet(data.sheet);
       setGoals(data.goals);
+      
+      // Initialize adjustment values for shared goals
+      const adjustInit = {};
+      data.goals.forEach(g => {
+        if (g.sharedRole === "RECIPIENT") {
+          adjustInit[g._id] = g.adjustedWeightage || g.baseWeightage || g.weightage;
+        }
+      });
+      setAdjustValues(adjustInit);
+      
       setError("");
     } catch (err) {
       setError(err.message);
@@ -72,7 +86,7 @@ export default function EmployeeGoals() {
   const formErrors = validate();
   const canSubmit = Object.keys(formErrors).length === 0;
 
-  const totalWeightage = goals.reduce((sum, g) => sum + g.weightage, 0);
+  const totalWeightage = goals.reduce((sum, g) => sum + (adjustValues[g._id] || g.weightage), 0);
   const totalValid = totalWeightage === 100;
   const canSubmitSheet = totalWeightage > 0 && totalValid && goals.length > 0;
 
@@ -190,6 +204,41 @@ export default function EmployeeGoals() {
     setError("");
   }
 
+  // Handle adjust weightage for shared goals
+  async function handleAdjustWeightage(goalId) {
+    if (!adjustValues[goalId] || adjustValues[goalId] < 1 || adjustValues[goalId] > 100) {
+      setError("Weightage must be 1-100");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/api/employee/goals/${goalId}/adjust-weightage`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          adjustedWeightage: Number(adjustValues[goalId]),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to adjust weightage");
+      }
+
+      const updated = await res.json();
+      setGoals((prev) => prev.map((g) => (g._id === goalId ? updated : g)));
+      setSuccess("✓ Weightage adjusted");
+      setAdjustingWeightage(null);
+      setTimeout(() => setSuccess(""), 2500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Handle submit sheet
   async function handleSubmitSheet() {
     if (!canSubmitSheet) {
@@ -238,37 +287,54 @@ export default function EmployeeGoals() {
     <div className="page">
       <div className="card">
         <div className="section-header">
-          <div>
-            <h2>My Goals - {sheet?.year}</h2>
-            <p className="subtle">
-              Status: <span className={`badge badge--${sheet?.status.toLowerCase()}`}>{sheet?.status}</span>
-            </p>
-          </div>
-          {!isLocked && (
-            <button
-              className="btn btn--primary"
-              onClick={() => {
-                if (!showForm) {
-                  setFormData({
-                    thrustArea: THRUST_AREAS[0],
-                    title: "",
-                    description: "",
-                    uomType: UOM_TYPES[0],
-                    targetValue: "",
-                    targetDate: "",
-                    weightage: "",
-                  });
-                  setEditing(null);
-                  setTouched({});
-                }
-                setShowForm(!showForm);
-                setError("");
-              }}
-            >
-              {showForm ? "Cancel" : "+ Add Goal"}
-            </button>
-          )}
-        </div>
+  <div>
+    <h2>My Goals - {sheet?.year}</h2>
+    <p className="subtle">
+      Status: <span className={`badge badge--${sheet?.status.toLowerCase()}`}>{sheet?.status}</span>
+    </p>
+  </div>
+  
+  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <div>
+      <label htmlFor="year-select" style={{ marginRight: "0.5rem", color: "#9ca3af" }}>Year:</label>
+      <select 
+        id="year-select"
+        value={selectedYear} 
+        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+        className="year-selector"
+      >
+        {[currentYear - 1, currentYear, currentYear + 1].map(y => (
+          <option key={y} value={y}>{y}</option>
+        ))}
+      </select>
+    </div>
+
+    {!isLocked && (
+      <button
+        className="btn btn--primary"
+        onClick={() => {
+          if (!showForm) {
+            setFormData({
+              thrustArea: THRUST_AREAS[0],
+              title: "",
+              description: "",
+              uomType: UOM_TYPES[0],
+              targetValue: "",
+              targetDate: "",
+              weightage: "",
+            });
+            setEditing(null);
+            setTouched({});
+          }
+          setShowForm(!showForm);
+          setError("");
+        }}
+      >
+        {showForm ? "Cancel" : "+ Add Goal"}
+      </button>
+    )}
+  </div>
+</div>
 
         {/* Form */}
         {showForm && !isLocked && (
@@ -421,41 +487,102 @@ export default function EmployeeGoals() {
             <p className="subtle">No goals yet. Click "+ Add Goal" to get started!</p>
           ) : (
             <div className="goals-list">
-              {goals.map((goal) => (
-                <div key={goal._id} className="goal-card">
-                  <div className="goal-header">
-                    <div>
-                      <h4>{goal.title}</h4>
-                      <p className="subtle">
-                        {goal.thrustArea} • {goal.uomType} • Target: {goal.targetValue}
-                        {goal.targetDate && ` by ${new Date(goal.targetDate).toLocaleDateString()}`}
-                      </p>
+              {goals.map((goal) => {
+                const isShared = goal.sharedGroupId;
+                const isRecipient = goal.sharedRole === "RECIPIENT";
+
+                return (
+                  <div key={goal._id} className={`goal-card ${isShared ? "goal-card--shared" : ""}`}>
+                    <div className="goal-header">
+                      <div style={{ flex: 1 }}>
+                        <h4>
+                          {goal.title}
+                          {isShared && <span className="badge badge--shared">📌 Shared</span>}
+                        </h4>
+                        <p className="subtle">
+                          {goal.thrustArea} • {goal.uomType} • Target: {goal.targetValue}
+                          {goal.targetDate && ` by ${new Date(goal.targetDate).toLocaleDateString()}`}
+                        </p>
+                        {isRecipient && goal.syncedAchievement !== null && (
+                          <p className="subtle" style={{ color: "#10b981", marginTop: "0.25rem" }}>
+                            🔄 Synced Achievement: {goal.syncedAchievement}
+                          </p>
+                        )}
+                      </div>
+                      <div className="goal-meta">
+                        {adjustingWeightage === goal._id ? (
+                          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={adjustValues[goal._id] || ""}
+                              onChange={(e) => setAdjustValues((p) => ({ ...p, [goal._id]: parseInt(e.target.value) || 0 }))}
+                              style={{
+                                padding: "0.25rem 0.5rem",
+                                width: "60px",
+                                background: "#0a0e27",
+                                border: "1px solid #374151",
+                                borderRadius: "4px",
+                                color: "#e5e7eb",
+                              }}
+                            />
+                            <button
+                              className="btn btn--primary btn--xs"
+                              onClick={() => handleAdjustWeightage(goal._id)}
+                              disabled={loading}
+                            >
+                              Save
+                            </button>
+                            <button
+                              className="btn btn--ghost btn--xs"
+                              onClick={() => setAdjustingWeightage(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="badge badge--weightage">{adjustValues[goal._id] || goal.weightage}%</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="goal-meta">
-                      <span className="badge badge--weightage">{goal.weightage}%</span>
+
+                    {goal.description && <p className="subtle">{goal.description}</p>}
+
+                    <div className="goal-actions">
+                      {!isLocked && !isShared && (
+                        <>
+                          <button
+                            className="btn btn--ghost btn--sm"
+                            onClick={() => handleEdit(goal)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn--ghost btn--sm btn--danger"
+                            onClick={() => handleDelete(goal._id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      {isRecipient && !isLocked && (
+                        <button
+                          className="btn btn--ghost btn--sm"
+                          onClick={() => setAdjustingWeightage(goal._id)}
+                        >
+                          ⚙️ Adjust Weightage
+                        </button>
+                      )}
+                      {isShared && (
+                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontStyle: "italic" }}>
+                          {isRecipient ? "Weightage adjustable" : "Read-only (primary owner)"}
+                        </span>
+                      )}
                     </div>
                   </div>
-
-                  {goal.description && <p className="subtle">{goal.description}</p>}
-
-                  {!isLocked && (
-                    <div className="goal-actions">
-                      <button
-                        className="btn btn--ghost btn--sm"
-                        onClick={() => handleEdit(goal)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn--ghost btn--sm btn--danger"
-                        onClick={() => handleDelete(goal._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -479,138 +606,28 @@ export default function EmployeeGoals() {
           </div>
         )}
 
-        {sheet?.status === "SUBMITTED" && (
-          <div className="info">
-            ℹ️ Your goal sheet has been submitted. Waiting for manager approval.
-          </div>
-        )}
-
-        {sheet?.status === "RETURNED" && (
-          <div className="warning">
-            ⚠️ Your goal sheet was returned. Reason: {sheet.returnedReason || "No reason provided"}
-          </div>
-        )}
-
-        {sheet?.status === "LOCKED" && (
-          <div className="success">
-            ✓ Your goal sheet has been approved and locked.
-          </div>
-        )}
-
-        {error && !showForm && <div className="error">⚠️ {error}</div>}
+        {error && <div className="section"><div className="error">⚠️ {error}</div></div>}
+        {success && <div className="section"><div className="success">{success}</div></div>}
       </div>
 
       <style>{`
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
+        .goal-card--shared {
+          border: 1px solid #6366f1;
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), transparent);
         }
 
-        .weightage-indicator {
-          margin: 1rem 0;
-        }
-
-        .weightage-bar {
-          height: 10px;
-          background: #1e293b;
-          border-radius: 4px;
-          overflow: hidden;
-          margin-bottom: 0.5rem;
-        }
-
-        .weightage-fill {
-          height: 100%;
-          transition: width 0.3s, background-color 0.3s;
-        }
-
-        .goals-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .goal-card {
-          border: 1px solid #334155;
-          border-radius: 8px;
-          padding: 1rem;
-          background: #0f172a;
-        }
-
-        .goal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: start;
-          margin-bottom: 0.5rem;
-        }
-
-        .goal-header h4 {
-          margin: 0 0 0.25rem 0;
-          font-size: 1rem;
-        }
-
-        .goal-meta {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .badge--weightage {
+        .badge--shared {
           background: #6366f1;
           color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.875rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: 3px;
+          font-size: 0.75rem;
+          margin-left: 0.5rem;
         }
 
-        .badge--draft { background: #6b7280; }
-        .badge--submitted { background: #3b82f6; }
-        .badge--returned { background: #f59e0b; }
-        .badge--locked { background: #10b981; }
-
-        .goal-actions {
-          display: flex;
-          gap: 0.5rem;
-          margin-top: 0.75rem;
-        }
-
-        .btn--sm {
-          padding: 0.25rem 0.75rem;
-          font-size: 0.875rem;
-        }
-
-        .btn--danger {
-          color: #ef4444;
-        }
-
-        .info {
-          background: #0369a1;
-          color: #e0f2fe;
-          padding: 0.75rem;
-          border-radius: 4px;
-          margin-top: 1rem;
-        }
-
-        .warning {
-          background: #92400e;
-          color: #fef3c7;
-          padding: 0.75rem;
-          border-radius: 4px;
-          margin-top: 1rem;
-        }
-
-        @media (max-width: 768px) {
-          .form-row {
-            grid-template-columns: 1fr;
-          }
-
-          .goal-header {
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-
-          .goal-actions {
-            flex-direction: column;
-          }
+        .btn--xs {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
         }
       `}</style>
     </div>

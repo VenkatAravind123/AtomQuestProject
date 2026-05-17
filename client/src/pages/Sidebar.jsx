@@ -84,6 +84,7 @@ function getNavItems(role) {
     EMPLOYEE: [
       { path: "/employee/goals", label: "My Goals", icon: "🎯" },
       { path: "/employee/updates", label: "Updates", icon: "📈" },
+      
     ],
     MANAGER: [
       { path: "/manager/approvals", label: "Approvals", icon: "✅" },
