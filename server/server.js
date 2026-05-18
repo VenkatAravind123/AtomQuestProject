@@ -16,10 +16,17 @@ dotenv.config();
 const app = express();
 
 // to parse JSON data
+// server/server.js
+const allowedOrigin =
+  process.env.ORIGIN ||
+  (process.env.NODE_ENV === "production"
+    ? "https://atom-quest-project.vercel.app"   // <-- replace with your real Vercel URL
+    : "http://localhost:5173");
+
 app.use(
   cors({
-    origin: process.env.ORIGIN || "http://localhost:5173",
-    credentials: true,
+    origin: allowedOrigin,
+    credentials: true,   // needed for httpOnly cookie
   })
 );
 
