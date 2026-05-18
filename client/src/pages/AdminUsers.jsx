@@ -918,6 +918,52 @@ export default function AdminUsers() {
         .submit-btn:hover:not(:disabled) .arrow {
           transform: translateX(4px);
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+          .users-list-card {
+            padding: 1rem;
+            border-radius: 16px;
+          }
+
+          .header-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+          
+          .btn-add {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .users-table th, 
+          .users-table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.85rem;
+          }
+
+          .modal-panel {
+            padding: 1.5rem;
+            margin: 1rem;
+            width: calc(100% - 2rem);
+            max-height: 90vh;
+            overflow-y: auto;
+          }
+
+          .modal-header h3 {
+            font-size: 1.25rem;
+          }
+
+          .modal-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          
+          .modal-actions button {
+            width: 100%;
+          }
+        }
       `}</style>
     </div>
   );

@@ -413,6 +413,85 @@ export default function ManagerCheckins() {
         .empty-icon { font-size: 2.5rem; }
         .empty-state p { font-size: 1.1rem; color: #cbd5e1; font-weight: 500; }
         .slide-up { animation: slideUp 0.5s ease-out backwards; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+          .glass-card {
+            padding: 1.25rem;
+            border-radius: 16px;
+          }
+          
+          .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .header-text h2 {
+            font-size: 1.8rem;
+          }
+          
+          .controls-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+            padding: 1rem;
+          }
+          
+          .filter-group-inline {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+          }
+          
+          .quarter-tabs {
+            flex-wrap: wrap;
+          }
+          
+          .quarter-tab {
+            flex: 1;
+            text-align: center;
+          }
+          
+          .employee-section {
+            padding: 1.25rem;
+          }
+          
+          .employee-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+          
+          .checkin-card {
+            padding: 1.25rem;
+          }
+          
+          .feedback-stat {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+          
+          .checkin-form {
+            padding: 1rem;
+          }
+          
+          .form-actions-row {
+            flex-direction: column;
+          }
+          
+          .btn-action {
+            width: 100%;
+          }
+          
+          .btn-outline-primary {
+            width: 100%;
+          }
+          
+          .action-row-end {
+            flex-direction: column;
+          }
+        }
       `}</style>
     </div>
   );

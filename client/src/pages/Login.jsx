@@ -564,6 +564,37 @@ export default function Login() {
           color: #fff;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+          .glass-panel {
+            padding: 1.5rem;
+          }
+          
+          .login-container {
+            padding: 1rem;
+          }
+          
+          .login-header h2 {
+            font-size: 1.75rem;
+          }
+          
+          .demo-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+          }
+          
+          .btn-demo {
+            flex-direction: row;
+            justify-content: center;
+            padding: 0.85rem;
+            font-size: 0.9rem;
+          }
+          
+          .demo-icon {
+            margin-right: 0.5rem;
+          }
+        }
       `}</style>
     </div>
   );

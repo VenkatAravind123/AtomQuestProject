@@ -597,6 +597,69 @@ export default function AdminCycles() {
         .empty-icon-wrap { width: 80px; height: 80px; background: rgba(99, 102, 241, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
         .empty-icon { font-size: 2.5rem; }
         .empty-state p { font-size: 1.1rem; color: #cbd5e1; font-weight: 500; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+          .glass-card {
+            padding: 1.25rem;
+            border-radius: 16px;
+          }
+          
+          .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .header-text h2 {
+            font-size: 1.8rem;
+          }
+          
+          .toggle-btn {
+            width: 100%;
+          }
+          
+          .controls-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+          }
+          
+          .year-selector {
+            justify-content: space-between;
+          }
+          
+          .inline-select select {
+            width: 100%;
+          }
+          
+          .form-card {
+            padding: 1.25rem;
+          }
+          
+          .cycle-card {
+            padding: 1.25rem;
+          }
+          
+          .detail-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+          }
+          
+          .detail-divider {
+            display: none;
+          }
+          
+          .cycle-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+          
+          .status-badge {
+            align-self: flex-start;
+          }
+        }
       `}</style>
     </div>
   );

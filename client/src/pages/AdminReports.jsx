@@ -681,6 +681,56 @@ export default function AdminReports() {
 
         .empty-state { text-align: center; padding: 4rem 2rem; background: rgba(30, 41, 59, 0.3); border-radius: 20px; border: 1px dashed rgba(148, 163, 184, 0.2); }
         .empty-state p { font-size: 1.1rem; color: #cbd5e1; font-weight: 500; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+          .glass-card {
+            padding: 1.25rem;
+            border-radius: 16px;
+          }
+          
+          .reports-tabs {
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .tab-button {
+            width: 100%;
+            text-align: center;
+          }
+
+          .reports-header h2 {
+            font-size: 1.75rem;
+          }
+
+          .reports-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .log-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .log-time {
+            margin-left: 0;
+            width: fit-content;
+          }
+
+          .detail-row {
+            flex-direction: column;
+            gap: 0.25rem;
+          }
+
+          .status-row {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+          }
+          
+          .status-count {
+            text-align: left;
+          }
+        }
       `}</style>
     </div>
   );
