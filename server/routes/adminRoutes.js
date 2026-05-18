@@ -15,7 +15,7 @@ router.post("/users", requireAuth, requireRole("ADMIN"), adminController.createU
 router.get("/ping", requireAuth, requireRole("ADMIN"), (req, res) => {
   res.json({ ok: true, route: "admin", user: req.user });
 });
-
+router.get("/users", requireAuth, requireRole("ADMIN"), adminController.getUsers);
 router.get("/managers", requireAuth, requireRole("ADMIN"), adminController.getManagers);
 
 router.get("/shared-goals", requireAuth, requireRole("ADMIN"), sharedGoalsController.getSharedGoalGroups);

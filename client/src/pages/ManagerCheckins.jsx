@@ -81,8 +81,8 @@ export default function ManagerCheckins() {
 
   if (loading) {
     return (
-      <div className="page">
-        <div className="card">
+      <div className="page manager-checkins-page">
+        <div className="card glass-card">
           <p>Loading check-ins...</p>
         </div>
       </div>
@@ -101,23 +101,27 @@ export default function ManagerCheckins() {
   });
 
   return (
-    <div className="page">
-      <div className="card">
-        <h2>Team Goal Check-ins</h2>
-        <p className="subtle">Record feedback on team member progress</p>
+    <div className="page manager-checkins-page">
+      <div className="card glass-card">
+        <div className="page-header">
+          <div className="header-text">
+            <h2>Team Goal Check-ins</h2>
+            <p className="subtle">Record feedback on team member progress</p>
+          </div>
+        </div>
 
-        {success && <div className="success-banner">{success}</div>}
-        {error && <div className="error-banner">{error}</div>}
+        {success && <div className="banner success-banner fade-in"><span className="banner-icon">✓</span> {success}</div>}
+        {error && <div className="banner error-banner fade-in"><span className="banner-icon">!</span> {error}</div>}
 
         {/* Filters */}
-        <div className="filters">
-          <div className="filter-group">
-            <label>Quarter:</label>
-            <div className="button-group">
+        <div className="controls-bar">
+          <div className="filter-group-inline">
+            <label className="filter-label"><span className="filter-icon">📊</span> Quarter:</label>
+            <div className="quarter-tabs">
               {QUARTERS.map(q => (
                 <button
                   key={q}
-                  className={`filter-btn ${selectedQuarter === q ? "active" : ""}`}
+                  className={`quarter-tab ${selectedQuarter === q ? "active glow-effect" : ""}`}
                   onClick={() => setSelectedQuarter(q)}
                 >
                   {q}
@@ -126,52 +130,60 @@ export default function ManagerCheckins() {
             </div>
           </div>
 
-          <div className="filter-group">
-            <label>Year:</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="select-input"
-            >
-              {[currentYear - 1, currentYear, currentYear + 1].map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
+          <div className="filter-group-inline">
+            <label className="filter-label"><span className="filter-icon">🗓️</span> Year:</label>
+            <div className="input-wrapper select-wrapper inline-select">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              >
+                {[currentYear - 1, currentYear, currentYear + 1].map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Check-ins by Employee */}
         {Object.keys(groupedByEmployee).length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">💬</div>
+          <div className="empty-state slide-up">
+            <div className="empty-icon-wrap">
+              <div className="empty-icon">💬</div>
+            </div>
             <p>No check-ins recorded yet for this period</p>
           </div>
         ) : (
-          <div className="checkins-list">
-            {Object.values(groupedByEmployee).map(({ employee, goals }) => (
-              <div key={employee._id} className="employee-section">
+          <div className="checkins-wrapper">
+            {Object.values(groupedByEmployee).map(({ employee, goals }, empIndex) => (
+              <div key={employee._id} className="employee-section slide-up" style={{ animationDelay: `${empIndex * 0.1}s` }}>
                 <div className="employee-header">
-                  <div>
-                    <h3>{employee.name}</h3>
-                    <p className="subtle">{employee.email}</p>
+                  <div className="employee-info">
+                    <div className="avatar-placeholder">
+                      {employee.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="employee-name">{employee.name}</h3>
+                      <p className="employee-email subtle">{employee.email}</p>
+                    </div>
                   </div>
-                  <div className="goal-count">
-                    {goals.length} {goals.length === 1 ? "goal" : "goals"}
+                  <div className="goal-count-badge">
+                    {goals.length} {goals.length === 1 ? "Goal" : "Goals"}
                   </div>
                 </div>
 
                 <div className="goals-container">
                   {goals.map((checkin) => (
-                    <div key={checkin.goalId._id} className="checkin-card">
+                    <div key={checkin.goalId._id} className="checkin-card inner-glass hover-lift">
                       {/* Goal Info */}
                       <div className="goal-info">
-                        <h4>{checkin.goalId.title}</h4>
-                        <p className="subtle">{checkin.goalId.thrustArea}</p>
+                        <h4 className="goal-title">{checkin.goalId.title}</h4>
+                        <span className="area-tag">{checkin.goalId.thrustArea}</span>
                       </div>
 
                       {/* Current Feedback */}
                       {checkin.feedback && (
-                        <div className="current-feedback">
+                        <div className="current-feedback-box">
                           <div className="feedback-stat">
                             <span className="label">Last Feedback:</span>
                             <span className={`feedback-badge feedback-${checkin.feedback.toLowerCase()}`}>
@@ -179,13 +191,15 @@ export default function ManagerCheckins() {
                             </span>
                           </div>
                           {checkin.managerNotes && (
-                            <div className="feedback-notes">
-                              <strong>Notes:</strong> {checkin.managerNotes}
+                            <div className="feedback-content">
+                              <span className="content-label">Notes:</span>
+                              <p>{checkin.managerNotes}</p>
                             </div>
                           )}
                           {checkin.actionItems && (
-                            <div className="action-items">
-                              <strong>Action Items:</strong> {checkin.actionItems}
+                            <div className="feedback-content">
+                              <span className="content-label">Action Items:</span>
+                              <p>{checkin.actionItems}</p>
                             </div>
                           )}
                           <div className="feedback-date">
@@ -195,94 +209,92 @@ export default function ManagerCheckins() {
                       )}
 
                       {/* Edit Form */}
-                      {editingGoalId === checkin.goalId._id ? (
-                        <div className="checkin-form">
-                          <div className="form-group">
-                            <label>Feedback</label>
-                            <select
-                              value={formData.feedback}
-                              onChange={(e) =>
-                                setFormData(prev => ({
-                                  ...prev,
-                                  feedback: e.target.value,
-                                }))
-                              }
-                              className="select-input"
-                            >
-                              {FEEDBACK_OPTIONS.map(f => (
-                                <option key={f} value={f}>{f.replace(/_/g, " ")}</option>
-                              ))}
-                            </select>
-                          </div>
+                      <div className={`checkin-form-wrapper ${editingGoalId === checkin.goalId._id ? 'open' : ''}`}>
+                        {editingGoalId === checkin.goalId._id && (
+                          <div className="checkin-form">
+                            <div className="form-grid-responsive">
+                              <div className="field-group">
+                                <label className="float-label">Feedback</label>
+                                <div className="input-wrapper select-wrapper">
+                                  <select
+                                    value={formData.feedback}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, feedback: e.target.value }))}
+                                  >
+                                    {FEEDBACK_OPTIONS.map(f => (
+                                      <option key={f} value={f}>{f.replace(/_/g, " ")}</option>
+                                    ))}
+                                  </select>
+                                  <div className="focus-border"></div>
+                                </div>
+                              </div>
+                            </div>
 
-                          <div className="form-group">
-                            <label>Manager Notes</label>
-                            <textarea
-                              placeholder="Provide feedback and observations..."
-                              value={formData.managerNotes}
-                              onChange={(e) =>
-                                setFormData(prev => ({
-                                  ...prev,
-                                  managerNotes: e.target.value,
-                                }))
-                              }
-                              rows="3"
-                              className="textarea-input"
-                            />
-                          </div>
+                            <div className="field-group">
+                              <label className="float-label">Manager Notes</label>
+                              <div className="input-wrapper">
+                                <textarea
+                                  placeholder="Provide feedback and observations..."
+                                  value={formData.managerNotes}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, managerNotes: e.target.value }))}
+                                  rows="2"
+                                  className="textarea-modern"
+                                />
+                                <div className="focus-border"></div>
+                              </div>
+                            </div>
 
-                          <div className="form-group">
-                            <label>Action Items</label>
-                            <textarea
-                              placeholder="What should the employee focus on next?"
-                              value={formData.actionItems}
-                              onChange={(e) =>
-                                setFormData(prev => ({
-                                  ...prev,
-                                  actionItems: e.target.value,
-                                }))
-                              }
-                              rows="2"
-                              className="textarea-input"
-                            />
-                          </div>
+                            <div className="field-group">
+                              <label className="float-label">Action Items</label>
+                              <div className="input-wrapper">
+                                <textarea
+                                  placeholder="What should the employee focus on next?"
+                                  value={formData.actionItems}
+                                  onChange={(e) => setFormData(prev => ({ ...prev, actionItems: e.target.value }))}
+                                  rows="2"
+                                  className="textarea-modern"
+                                />
+                                <div className="focus-border"></div>
+                              </div>
+                            </div>
 
-                          <div className="form-actions">
-                            <button
-                              className="btn btn-primary"
-                              onClick={() => handleSubmitCheckin(checkin.goalId._id)}
-                            >
-                              Save Check-in
-                            </button>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => {
-                                setEditingGoalId(null);
-                                setFormData({
-                                  feedback: "GOOD",
-                                  managerNotes: "",
-                                  actionItems: "",
-                                });
-                              }}
-                            >
-                              Cancel
-                            </button>
+                            <div className="form-actions-row">
+                              <button
+                                className="btn-action btn-primary glow-effect"
+                                onClick={() => handleSubmitCheckin(checkin.goalId._id)}
+                              >
+                                Save Check-in
+                              </button>
+                              <button
+                                className="btn-action btn-cancel"
+                                onClick={() => {
+                                  setEditingGoalId(null);
+                                  setFormData({ feedback: "GOOD", managerNotes: "", actionItems: "" });
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
+                        )}
+                      </div>
+
+                      {/* Action Button */}
+                      {editingGoalId !== checkin.goalId._id && (
+                        <div className="action-row-end">
+                          <button
+                            className="btn-outline-primary"
+                            onClick={() => {
+                              setEditingGoalId(checkin.goalId._id);
+                              setFormData({
+                                feedback: checkin.feedback || "GOOD",
+                                managerNotes: checkin.managerNotes || "",
+                                actionItems: checkin.actionItems || "",
+                              });
+                            }}
+                          >
+                            {checkin.feedback ? "✎ Update Check-in" : "+ Add Check-in"}
+                          </button>
                         </div>
-                      ) : (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => {
-                            setEditingGoalId(checkin.goalId._id);
-                            setFormData({
-                              feedback: checkin.feedback || "GOOD",
-                              managerNotes: checkin.managerNotes || "",
-                              actionItems: checkin.actionItems || "",
-                            });
-                          }}
-                        >
-                          {checkin.feedback ? "Update Check-in" : "Add Check-in"}
-                        </button>
                       )}
                     </div>
                   ))}
@@ -294,239 +306,115 @@ export default function ManagerCheckins() {
       </div>
 
       <style>{`
-        .filters {
-          display: flex;
-          gap: 2rem;
-          margin-bottom: 2rem;
-          padding-bottom: 1.5rem;
-          border-bottom: 1px solid #1f2937;
-        }
+        /* Core Animations & Variables */
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .filter-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
+        .manager-checkins-page { perspective: 1000px; padding: 2rem 1rem; }
 
-        .filter-group label {
-          font-weight: 600;
-          font-size: 0.875rem;
-          color: #9ca3af;
-        }
+        /* Glassmorphism Containers */
+        .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 24px; padding: 2.5rem; max-width: 1200px; width: 100%; margin: 0 auto; animation: slideInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .inner-glass { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 16px; }
 
-        .button-group {
-          display: flex;
-          gap: 0.5rem;
-        }
+        /* Header & Banners */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
+        .header-text h2 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+        
+        .banner { padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 500; }
+        .success-banner { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; }
+        .error-banner { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
 
-        .filter-btn {
-          padding: 0.5rem 1rem;
-          background: #1f2937;
-          color: #9ca3af;
-          border: 1px solid #374151;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
+        /* Controls */
+        .controls-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding: 1.25rem 1.5rem; background: rgba(30, 41, 59, 0.3); border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.1); flex-wrap: wrap; gap: 1.5rem; }
+        .filter-group-inline { display: flex; align-items: center; gap: 1rem; }
+        .filter-label { font-weight: 600; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .quarter-tabs { display: flex; gap: 0.5rem; background: rgba(15, 23, 42, 0.5); padding: 0.25rem; border-radius: 12px; }
+        .quarter-tab { padding: 0.5rem 1.25rem; background: transparent; color: #94a3b8; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+        .quarter-tab:hover { color: #e2e8f0; }
+        .quarter-tab.active { background: #6366f1; color: white; }
 
-        .filter-btn.active {
-          background: #6366f1;
-          color: white;
-          border-color: #6366f1;
-        }
+        .input-wrapper { position: relative; border-radius: 12px; background: rgba(15, 23, 42, 0.5); }
+        .input-wrapper select { width: 100%; padding: 0.6rem 2.5rem 0.6rem 1.25rem; background: transparent; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px; color: #f8fafc; font-size: 0.95rem; transition: all 0.3s ease; appearance: none; }
+        .input-wrapper select:focus { outline: none; border-color: transparent; background: rgba(30, 41, 59, 0.8); }
+        .select-wrapper::after { content: '▼'; position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.7rem; pointer-events: none; }
 
-        .select-input {
-          padding: 0.5rem;
-          background: #111827;
-          border: 1px solid #374151;
-          border-radius: 4px;
-          color: #e5e7eb;
-        }
+        /* Employee Section */
+        .checkins-wrapper { display: flex; flex-direction: column; gap: 2rem; }
+        .employee-section { background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8)); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 2rem; transition: all 0.3s; }
+        
+        .employee-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
+        .employee-info { display: flex; align-items: center; gap: 1.25rem; }
+        .avatar-placeholder { width: 50px; height: 50px; border-radius: 14px; background: linear-gradient(135deg, #10b981, #059669); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+        .employee-name { margin: 0; font-size: 1.3rem; font-weight: 700; color: #f8fafc; }
+        .employee-email { margin: 0; font-size: 0.9rem; }
+        .goal-count-badge { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(99, 102, 241, 0.3); }
 
-        .checkins-list {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
+        /* Goals / Check-in Cards */
+        .goals-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 1.5rem; }
+        @media (max-width: 768px) { .goals-container { grid-template-columns: 1fr; } }
+        
+        .checkin-card { padding: 1.5rem; transition: all 0.3s; border-left: 3px solid #6366f1; display: flex; flex-direction: column; }
+        .hover-lift:hover { transform: translateY(-3px); border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+        
+        .goal-info { margin-bottom: 1.25rem; }
+        .goal-title { margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #e2e8f0; font-weight: 600; line-height: 1.4; }
+        .area-tag { display: inline-block; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 6px; background: rgba(148, 163, 184, 0.1); color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        .employee-section {
-          border: 1px solid #1f2937;
-          border-radius: 8px;
-          padding: 1.5rem;
-          background: #0f1119;
-        }
+        /* Feedback Display */
+        .current-feedback-box { background: rgba(15, 23, 42, 0.4); padding: 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; flex: 1; }
+        .feedback-stat { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
+        .feedback-stat .label { font-size: 0.85rem; color: #94a3b8; font-weight: 600; }
+        .feedback-badge { padding: 0.35rem 0.85rem; border-radius: 8px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .feedback-excellent { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .feedback-good { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .feedback-needs_improvement { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .feedback-off_track { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 
-        .employee-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid #1f2937;
-        }
+        .feedback-content { margin-bottom: 0.75rem; }
+        .content-label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 0.25rem; }
+        .feedback-content p { margin: 0; font-size: 0.9rem; color: #e2e8f0; line-height: 1.5; }
+        .feedback-date { font-size: 0.75rem; color: #64748b; margin-top: 1rem; font-style: italic; }
 
-        .employee-header h3 {
-          margin: 0 0 0.25rem 0;
-        }
+        /* Forms */
+        .checkin-form-wrapper { max-height: 0; overflow: hidden; transition: max-height 0.6s ease; opacity: 0; }
+        .checkin-form-wrapper.open { max-height: 800px; opacity: 1; margin-top: 1rem; }
+        .checkin-form { display: flex; flex-direction: column; gap: 1.25rem; background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); }
+        
+        .field-group { display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
+        .float-label { font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-left: 0.25rem; }
+        .textarea-modern { width: 100%; padding: 1rem 1.25rem; background: transparent; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px; color: #f8fafc; font-size: 0.95rem; transition: all 0.3s ease; appearance: none; font-family: inherit; resize: vertical; min-height: 80px; }
+        .textarea-modern:focus { outline: none; border-color: transparent; background: rgba(30, 41, 59, 0.8); }
+        .focus-border { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0; height: 2px; background: #6366f1; transition: width 0.3s ease; opacity: 0; }
+        .input-wrapper select:focus ~ .focus-border, .textarea-modern:focus ~ .focus-border { width: 100%; opacity: 1; }
 
-        .goal-count {
-          background: #1f2937;
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.875rem;
-          color: #9ca3af;
-        }
+        /* Actions */
+        .action-row-end { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 1rem; }
+        .form-actions-row { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+        
+        .btn-action { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0.85rem; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; }
+        .btn-cancel { background: rgba(148, 163, 184, 0.1); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.2); }
+        .btn-cancel:hover { background: rgba(148, 163, 184, 0.2); }
+        
+        .btn-outline-primary { background: transparent; border: 1px solid rgba(99, 102, 241, 0.5); color: #a5b4fc; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
+        .btn-outline-primary:hover { background: rgba(99, 102, 241, 0.1); border-color: #818cf8; color: #c7d2fe; }
 
-        .goals-container {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
+        .glow-effect { position: relative; overflow: hidden; }
+        .glow-effect::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899, #6366f1); z-index: -1; filter: blur(10px); opacity: 0; transition: opacity 0.3s; }
+        .glow-effect:hover::before { opacity: 1; }
+        .glow-effect:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4); }
 
-        .checkin-card {
-          border: 1px solid #334155;
-          border-radius: 6px;
-          padding: 1rem;
-          background: #0a0e27;
-        }
-
-        .goal-info h4 {
-          margin: 0 0 0.25rem 0;
-          font-size: 1rem;
-        }
-
-        .current-feedback {
-          background: #111827;
-          padding: 0.75rem;
-          border-radius: 4px;
-          margin: 0.75rem 0;
-          border-left: 3px solid #6366f1;
-        }
-
-        .feedback-stat {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 0.5rem;
-        }
-
-        .feedback-badge {
-          display: inline-block;
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.875rem;
-          font-weight: 600;
-        }
-
-        .feedback-excellent { background: #dcfce7; color: #166534; }
-        .feedback-good { background: #bfdbfe; color: #1e3a8a; }
-        .feedback-needs_improvement { background: #fed7aa; color: #92400e; }
-        .feedback-off_track { background: #fecaca; color: #7f1d1d; }
-
-        .feedback-notes,
-        .action-items {
-          font-size: 0.875rem;
-          color: #d1d5db;
-          margin: 0.5rem 0;
-        }
-
-        .feedback-date {
-          font-size: 0.75rem;
-          color: #6b7280;
-          margin-top: 0.5rem;
-        }
-
-        .checkin-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          padding: 1rem;
-          background: #111827;
-          border-radius: 4px;
-          margin-top: 1rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .form-group label {
-          font-weight: 600;
-          font-size: 0.875rem;
-          color: #d1d5db;
-        }
-
-        .textarea-input {
-          padding: 0.75rem;
-          background: #0a0e27;
-          border: 1px solid #374151;
-          border-radius: 4px;
-          color: #e5e7eb;
-          font-family: inherit;
-          resize: vertical;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 0.75rem;
-        }
-
-        .btn {
-          padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 4px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-primary {
-          background: #6366f1;
-          color: white;
-        }
-
-        .btn-primary:hover {
-          background: #4f46e5;
-        }
-
-        .btn-secondary {
-          background: #6b7280;
-          color: white;
-        }
-
-        .btn-secondary:hover {
-          background: #4b5563;
-        }
-
-        .success-banner {
-          background: #064e3b;
-          color: #86efac;
-          padding: 0.75rem 1rem;
-          border-radius: 4px;
-          margin-bottom: 1rem;
-          border: 1px solid #10b981;
-        }
-
-        .error-banner {
-          background: #7f1d1d;
-          color: #fecaca;
-          padding: 0.75rem 1rem;
-          border-radius: 4px;
-          margin-bottom: 1rem;
-          border: 1px solid #dc2626;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 2rem;
-        }
-
-        .empty-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
+        /* Empty State */
+        .empty-state { text-align: center; padding: 4rem 2rem; background: rgba(30, 41, 59, 0.3); border-radius: 20px; border: 1px dashed rgba(148, 163, 184, 0.2); }
+        .empty-icon-wrap { width: 80px; height: 80px; background: rgba(99, 102, 241, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .empty-icon { font-size: 2.5rem; }
+        .empty-state p { font-size: 1.1rem; color: #cbd5e1; font-weight: 500; }
+        .slide-up { animation: slideUp 0.5s ease-out backwards; }
       `}</style>
     </div>
   );
 }
+

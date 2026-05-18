@@ -90,7 +90,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="page">
+      <div className="page page--wide">
         <div className="card">
           <p>Loading dashboard...</p>
         </div>
@@ -99,8 +99,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="page">
-      <div className="card">
+    <div className="page page--wide">
+      <div className="card dashboard-layout">
         <div className="dashboard-header">
           <div>
             <h1>Welcome, {user?.name}! 👋</h1>
@@ -364,75 +364,105 @@ export default function Dashboard() {
       </div>
 
       <style>{`
-        .dashboard-header {
-          margin-bottom: 2rem;
+                       .dashboard-header {
+          margin-bottom: 2.5rem;
           padding-bottom: 1.5rem;
-          border-bottom: 1px solid #1f2937;
+          border-bottom: 1px solid #1e293b;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
         }
 
         .dashboard-header h1 {
           margin: 0 0 0.5rem 0;
           font-size: 2rem;
+          font-weight: 600;
+          color: #f8fafc;
+          letter-spacing: -0.02em;
         }
 
+        .dashboard-header p {
+          margin: 0;
+          color: #94a3b8;
+          font-size: 0.95rem;
+        }
+
+        /* The Grid that spreads horizontally */
         .stats-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 1.5rem;
           margin-bottom: 2rem;
+          width: 100%;
         }
 
+        /* Stat Cards - Midnight Blue Style */
         .stat-card {
           display: flex;
-          gap: 1rem;
+          align-items: flex-start;
+          gap: 1.25rem;
           padding: 1.5rem;
-          background: #111827;
-          border: 1px solid #1f2937;
+          background: #0f172a;
+          border: 1px solid #1e293b;
           border-radius: 8px;
-          transition: all 0.2s;
+          transition: border-color 0.2s ease, background-color 0.2s ease;
         }
 
         .stat-card:hover {
-          border-color: #6366f1;
-          box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
+          border-color: #3b82f6;
+          background: #1e293b;
         }
 
         .stat-icon {
-          font-size: 2.5rem;
-          line-height: 1;
+          font-size: 2rem;
+          padding: 0.75rem;
+          background: #1e293b;
+          border-radius: 8px;
+          border: 1px solid #334155;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .stat-content {
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          gap: 0.25rem;
         }
 
         .stat-label {
           margin: 0;
-          color: #9ca3af;
-          font-size: 0.875rem;
-          font-weight: 600;
+          color: #94a3b8;
+          font-size: 0.85rem;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
 
         .stat-value {
-          margin: 0.25rem 0 0 0;
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #e5e7eb;
+          margin: 0;
+          font-size: 2rem;
+          font-weight: 600;
+          color: #f8fafc;
+          line-height: 1;
         }
 
+        /* Wider Sections */
         .section-card {
-          background: #111827;
-          border: 1px solid #1f2937;
+          background: #0f172a;
+          border: 1px solid #1e293b;
           border-radius: 8px;
           padding: 1.5rem;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
         }
 
         .section-card h3 {
-          margin: 0 0 1rem 0;
-          color: #e5e7eb;
+          margin: 0 0 1.5rem 0;
+          color: #f8fafc;
+          font-size: 1.1rem;
+          font-weight: 600;
+          border-bottom: 1px solid #1e293b;
+          padding-bottom: 0.75rem;
         }
 
         .status-list {
@@ -443,126 +473,118 @@ export default function Dashboard() {
 
         .status-item {
           display: grid;
-          grid-template-columns: 120px 1fr 60px;
-          gap: 1rem;
+          grid-template-columns: 140px 1fr 60px;
+          gap: 1.25rem;
           align-items: center;
         }
 
         .status-name {
-          color: #d1d5db;
-          font-weight: 600;
-          font-size: 0.875rem;
+          color: #cbd5e1;
+          font-weight: 500;
+          font-size: 0.9rem;
         }
 
         .status-bar {
-          height: 24px;
-          background: #1f2937;
-          border-radius: 4px;
+          height: 12px;
+          background: #1e293b;
+          border-radius: 20px;
           overflow: hidden;
         }
 
         .status-fill {
           height: 100%;
-          transition: width 0.3s ease;
+          border-radius: 20px;
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .status-count {
-          color: #9ca3af;
-          font-size: 0.875rem;
+          color: #94a3b8;
+          font-size: 0.9rem;
+          font-weight: 500;
           text-align: right;
         }
 
         .progress-bar {
-          height: 32px;
-          background: #1f2937;
-          border-radius: 4px;
+          height: 16px;
+          background: #1e293b;
+          border-radius: 20px;
           overflow: hidden;
-          position: relative;
         }
 
         .progress-fill {
           height: 100%;
-          background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
-          transition: width 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 600;
-          font-size: 0.875rem;
+          background: #3b82f6;
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .status-badge {
-          display: inline-block;
-          padding: 0.5rem 1rem;
-          border-radius: 4px;
-          font-weight: 600;
-          font-size: 1rem;
+          display: inline-flex;
+          align-items: center;
+          padding: 0.35rem 0.75rem;
+          border-radius: 9999px;
+          font-weight: 500;
+          font-size: 0.85rem;
+          letter-spacing: 0.025em;
+          border: 1px solid transparent;
         }
 
-        .status-badge.draft {
-          background: #9ca3af;
-          color: #0a0e27;
-        }
-
-        .status-badge.submitted {
-          background: #3b82f6;
-          color: white;
-        }
-
-        .status-badge.approved {
-          background: #10b981;
-          color: white;
-        }
-
-        .status-badge.rejected {
-          background: #ef4444;
-          color: white;
-        }
-
-        .status-badge.locked {
-          background: #f59e0b;
-          color: white;
-        }
-
-        .status-badge.not_started {
-          background: #6b7280;
-          color: white;
-        }
+        /* Status Badge Adjustments for Navy */
+        .status-badge.draft { background: #1e293b; border-color: #334155; color: #94a3b8; }
+        .status-badge.submitted { background: #172554; border-color: #1e3a8a; color: #60a5fa; }
+        .status-badge.approved { background: #022c22; border-color: #064e3b; color: #34d399; }
+        .status-badge.rejected { background: #450a0a; border-color: #7f1d1d; color: #f87171; }
+        .status-badge.locked { background: #422006; border-color: #78350f; color: #fbbf24; }
+        .status-badge.not_started { background: #1e293b; border-color: #334155; color: #94a3b8; }
 
         .action-section {
-          display: flex;
-          gap: 1rem;
-          margin-top: 2rem;
-          padding-top: 2rem;
-          border-top: 1px solid #1f2937;
+          padding-top: 1rem;
         }
 
         .btn {
           padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 4px;
-          font-weight: 600;
+          border: 1px solid #334155;
+          border-radius: 6px;
+          font-weight: 500;
+          font-size: 0.9rem;
           cursor: pointer;
           transition: all 0.2s;
+          background: #1e293b;
+          color: #f8fafc;
+        }
+
+        .btn:hover {
+          background: #334155;
+          border-color: #475569;
         }
 
         .btn-primary {
-          background: #6366f1;
-          color: white;
+          background: #3b82f6;
+          color: #ffffff;
+          border: none;
         }
 
         .btn-primary:hover {
-          background: #4f46e5;
+          background: #2563eb;
         }
 
         .error-banner {
-          background: #7f1d1d;
-          color: #fecaca;
-          padding: 0.75rem 1rem;
-          border-radius: 4px;
+          background: #450a0a;
+          color: #fca5a5;
+          padding: 1rem;
+          border-radius: 6px;
           margin-bottom: 1.5rem;
-          border: 1px solid #dc2626;
+          border: 1px solid #7f1d1d;
+          font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+          .stats-grid { grid-template-columns: 1fr; }
+          .status-item { grid-template-columns: 100px 1fr 40px; gap: 1rem; }
         }
       `}</style>
     </div>

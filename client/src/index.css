@@ -24,15 +24,20 @@
 
 * { box-sizing: border-box; }
 
-html, body { height: 100%; margin: 0; }
+html, body { 
+  min-height: 100vh; 
+  margin: 0; 
+  background: var(--bg); /* Backup color */
+}
 
 body {
-  background: linear-gradient(135deg, #0a0e27 0%, #1a1f4b 50%, #0f1535 100%);
+  /* Use fixed attachment so scrolling never cuts off the gradient */
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f4b 50%, #0f1535 100%) fixed;
   overflow-x: hidden;
 }
 
 #root {
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
