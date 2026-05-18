@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
-
+import AuditLog from "../models/AuditLog.js";
 const roles = ["EMPLOYEE", "MANAGER", "ADMIN"];
 
 
@@ -40,13 +40,39 @@ if (!name || !email || !password) {
   });
 };
 
+// export const createUser = async (req, res) => {
+//   const { name, email, password, role, managerId, department } = req.body;
+
+// // Basic checks
+// if (!name || !email || !password || !role) {
+//   return res.status(400).json({ message: "name, email, password, role required" });
+// }
+
+//   const existing = await User.findOne({ email: email.toLowerCase() });
+//   if (existing) return res.status(409).json({ message: "Email already exists" });
+
+//   const passwordHash = await bcrypt.hash(password, 10);
+
+//   const user = await User.create({
+//     name,
+//     email: email.toLowerCase(),
+//     passwordHash,
+//     role,
+//     managerId: managerId || null,
+//     department: department ?? null,
+//   });
+
+//   return res.status(201).json({
+//     message: "User created",
+//     user: { id: user._id, name: user.name, email: user.email, role: user.role, managerId: user.managerId },
+//   });
+// };
 export const createUser = async (req, res) => {
   const { name, email, password, role, managerId, department } = req.body;
 
-// Basic checks
-if (!name || !email || !password || !role) {
-  return res.status(400).json({ message: "name, email, password, role required" });
-}
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ message: "name, email, password, role required" });
+  }
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) return res.status(409).json({ message: "Email already exists" });
@@ -60,6 +86,17 @@ if (!name || !email || !password || !role) {
     role,
     managerId: managerId || null,
     department: department ?? null,
+  });
+
+  // Log user creation
+  await AuditLog.create({
+    entityType: "USER",
+    entityId: user._id.toString(),
+    action: "CREATE",
+    before: null,
+    after: { name: user.name, email: user.email, role: user.role, department: user.department },
+    actorUserId: req.user?._id || null,
+    timestamp: new Date()
   });
 
   return res.status(201).json({
@@ -83,6 +120,31 @@ export const getUsers = async (req, res) => {
       .select("_id name email role managerId department createdAt")
       .sort({ createdAt: -1 });
     res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Log deletion
+    await AuditLog.create({
+      entityType: "USER",
+      entityId: userId,
+      action: "DELETE",
+      before: { name: user.name, email: user.email, role: user.role },
+      after: null,
+      actorUserId: req.user._id,
+      timestamp: new Date()
+    });
+
+    await User.deleteOne({ _id: userId });
+    res.json({ message: "User deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

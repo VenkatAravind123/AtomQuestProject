@@ -2,6 +2,7 @@ import GoalSheet from "../models/GoalSheet.js";
 import Goal from "../models/Goal.js";
 import User from "../models/User.js";
 import Checkin from "../models/Checkin.js";
+import AuditLog from "../models/AuditLog.js";
 
 // Get pending approvals for manager
 // export const getPendingApprovals = async (req, res) => {
@@ -109,15 +110,27 @@ export const approveGoalSheet = async (req, res) => {
     }
 
     // Approve & lock
-    sheet.status = "APPROVED";
-    sheet.approvedBy = managerId;
-    sheet.approvedAt = new Date();
-    await sheet.save();
+    // Approve & lock
+sheet.status = "APPROVED";
+sheet.approvedBy = managerId;
+sheet.approvedAt = new Date();
+await sheet.save();
 
-    res.json({
-      message: "Goal sheet approved successfully",
-      sheet
-    });
+// Log approval
+await AuditLog.create({
+  entityType: "GOAL_SHEET",
+  entityId: sheetId,
+  action: "UPDATE",
+  before: { status: "SUBMITTED" },
+  after: { status: "APPROVED" },
+  actorUserId: managerId,
+  timestamp: new Date()
+});
+
+res.json({
+  message: "Goal sheet approved successfully",
+  sheet
+});
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -147,14 +160,26 @@ export const rejectGoalSheet = async (req, res) => {
     }
 
     // Reject and reset to DRAFT
-    sheet.status = "REJECTED";
-    sheet.rejectionReason = rejectionReason;
-    await sheet.save();
+   // Reject and reset to DRAFT
+sheet.status = "REJECTED";
+sheet.rejectionReason = rejectionReason;
+await sheet.save();
 
-    res.json({
-      message: "Goal sheet rejected",
-      sheet
-    });
+// Log rejection
+await AuditLog.create({
+  entityType: "GOAL_SHEET",
+  entityId: sheetId,
+  action: "UPDATE",
+  before: { status: "SUBMITTED" },
+  after: { status: "REJECTED", reason: rejectionReason },
+  actorUserId: managerId,
+  timestamp: new Date()
+});
+
+res.json({
+  message: "Goal sheet rejected",
+  sheet
+});
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -214,6 +239,17 @@ export const createCheckin = async (req, res) => {
         actionItems: actionItems || "",
         checkinDate: new Date(),
       });
+      await AuditLog.create({
+  entityType: "CHECKIN",
+  entityId: checkin._id.toString(),
+  action: "CREATE",
+  before: null,
+  after: { quarter, year, feedback, goalId },
+  actorUserId: managerId,
+  timestamp: new Date()
+});
+
+res.status(201).json(checkin);
     }
 
     await checkin.save();

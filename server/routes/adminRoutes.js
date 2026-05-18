@@ -27,5 +27,7 @@ router.post("/shared-goals/bulk-assign", requireAuth, requireRole("ADMIN"), shar
 router.get("/users-by-role", requireAuth, requireRole("ADMIN"), sharedGoalsController.getUsersByRole);
 
 router.put("/shared-goals/achievement", requireAuth, requireRole("ADMIN"), sharedGoalsController.updateSharedGoalAchievement);
+
+router.delete('/users/:userId', requireAuth, requireRole("ADMIN"), adminController.deleteUser);
 //router.put("/goals/:goalId/adjust-weightage", requireAuth, requireRole("EMPLOYEE"), sharedGoalsController.adjustSharedGoalWeightage);
 export default router;

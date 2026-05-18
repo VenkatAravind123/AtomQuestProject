@@ -4,6 +4,8 @@ import GoalUpdate from "../models/GoalUpdate.js";
 import Checkin from "../models/Checkin.js";
 import User from "../models/User.js";
 
+import AuditLog from "../models/AuditLog.js";
+
 // Get admin dashboard metrics
 export const getAdminDashboard = async (req, res) => {
   try {
@@ -14,7 +16,9 @@ export const getAdminDashboard = async (req, res) => {
 
     const totalGoalSheets = await GoalSheet.countDocuments();
     const approvedSheets = await GoalSheet.countDocuments({ status: "APPROVED" });
-    const pendingSheets = await GoalSheet.countDocuments({ status: "SUBMITTED" });
+    const submittedSheets = await GoalSheet.countDocuments({ status: "SUBMITTED" });
+    const draftSheets = await GoalSheet.countDocuments({ status: "DRAFT" });
+    const rejectedSheets = await GoalSheet.countDocuments({ status: "REJECTED" });
 
     const totalGoals = await Goal.countDocuments();
     const goalsWithUpdates = await GoalUpdate.distinct("goalId").then(ids => ids.length);
@@ -35,6 +39,18 @@ export const getAdminDashboard = async (req, res) => {
       ? ((approvedSheets / totalSubmitted) * 100).toFixed(1) 
       : 0;
 
+    // Manager check-in completion
+    const allGoals = await Goal.countDocuments();
+    const checkedInGoals = await Checkin.distinct("goalId").then(ids => ids.length);
+    const checkinRate = allGoals > 0 
+      ? ((checkedInGoals / allGoals) * 100).toFixed(1)
+      : 0;
+
+    // Employee submission rate
+    const employeeSubmissionRate = totalEmployees > 0
+      ? ((submittedSheets + approvedSheets) / totalEmployees * 100).toFixed(1)
+      : 0;
+
     res.json({
       users: {
         total: totalUsers,
@@ -48,7 +64,14 @@ export const getAdminDashboard = async (req, res) => {
       sheets: {
         total: totalGoalSheets,
         approved: approvedSheets,
-        pending: pendingSheets,
+        submitted: submittedSheets,
+        draft: draftSheets,
+        rejected: rejectedSheets,
+      },
+      completion: {
+        employeeSubmissionRate: parseFloat(employeeSubmissionRate),
+        checkinCompletionRate: parseFloat(checkinRate),
+        approvalRate: parseFloat(approvalRate),
       },
       statusDistribution,
       approvalRate: parseFloat(approvalRate),
@@ -173,34 +196,38 @@ export const getEmployeeDashboard = async (req, res) => {
 };
 
 // Export goals as CSV
+// Export goals with achievement report as CSV
+// Export goals with achievement report as CSV
 export const exportGoalsCSV = async (req, res) => {
   try {
     const { year } = req.query;
-    const adminId = req.user._id;
-
-    // Get all goal sheets for year
-    const sheets = await GoalSheet.find({ year: parseInt(year) })
+    
+    const goalSheets = await GoalSheet.find({ year: parseInt(year) })
       .populate("employeeId", "name email department")
       .populate("approvedBy", "name");
 
-    let csv = "Employee,Email,Department,Goal Title,Thrust Area,UoM Type,Target Value,Target Date,Weightage,Sheet Status,Approved By,Approved At\n";
+    let csv = "Employee,Email,Department,Goal Title,Thrust Area,UoM Type,Target Value,Actual Achievement,Achievement %,Status,Weightage,Sheet Status,Approved By\n";
 
-    for (const sheet of sheets) {
+    // For each goal sheet, fetch its goals
+    for (const sheet of goalSheets) {
       const goals = await Goal.find({ goalSheetId: sheet._id });
+      
+      goals.forEach(goal => {
+        const achievementPercent = goal.targetValue && goal.actualAchievement 
+          ? ((goal.actualAchievement / goal.targetValue) * 100).toFixed(1)
+          : "N/A";
 
-      for (const goal of goals) {
-        csv += `"${sheet.employeeId.name}","${sheet.employeeId.email}","${sheet.employeeId.department || 'N/A'}","${goal.title}","${goal.thrustArea}","${goal.uomType}","${goal.targetValue}","${goal.targetDate?.toISOString().split('T')[0] || 'N/A'}",${goal.weightage},"${sheet.status}","${sheet.approvedBy?.name || 'N/A'}","${sheet.approvedAt?.toISOString().split('T')[0] || 'N/A'}"\n`;
-      }
+        csv += `"${sheet.employeeId.name}","${sheet.employeeId.email}","${sheet.employeeId.department || 'N/A'}","${goal.title}","${goal.thrustArea}","${goal.uomType}","${goal.targetValue || 'N/A'}","${goal.actualAchievement || 'N/A'}","${achievementPercent}","${goal.achievementStatus || 'NOT_STARTED'}",${goal.weightage},"${sheet.status}","${sheet.approvedBy?.name || 'N/A'}"\n`;
+      });
     }
 
     res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", `attachment; filename="goals-${year}.csv"`);
+    res.setHeader("Content-Disposition", `attachment; filename="achievement-report-${year}.csv"`);
     res.send(csv);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 // Export check-ins as CSV
 export const exportCheckinsCSV = async (req, res) => {
   try {
@@ -225,6 +252,55 @@ export const exportCheckinsCSV = async (req, res) => {
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="checkins-${quarter}-${year}.csv"`);
     res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+export const updateGoalAchievement = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const { actualAchievement, achievementStatus } = req.body;
+
+    if (actualAchievement === undefined || achievementStatus === undefined) {
+      return res.status(400).json({ message: "actualAchievement and achievementStatus required" });
+    }
+
+    const goal = await Goal.findById(goalId);
+    
+    // Capture old values
+    const oldValues = {
+      actualAchievement: goal.actualAchievement,
+      achievementStatus: goal.achievementStatus
+    };
+
+    const updatedGoal = await Goal.findByIdAndUpdate(
+      goalId,
+      {
+        actualAchievement,
+        achievementStatus,
+        achievementDate: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updatedGoal) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+
+    // Log achievement update
+    await AuditLog.create({
+      entityType: "GOAL",
+      entityId: goalId,
+      action: "UPDATE",
+      before: oldValues,
+      after: { actualAchievement, achievementStatus },
+      actorUserId: req.user._id,
+      timestamp: new Date()
+    });
+
+    res.json({ message: "Goal achievement updated", goal: updatedGoal });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,7 +1,7 @@
 import GoalSheet from "../models/GoalSheet.js";
 import Goal from "../models/Goal.js";
 import User from "../models/User.js";
-
+import AuditLog from "../models/AuditLog.js";
 import GoalUpdate from "../models/GoalUpdate.js";
 
 // Get or create goal sheet for current year
@@ -56,16 +56,29 @@ export const createGoal = async (req, res) => {
     }
 
     const goal = await Goal.create({
-      goalSheetId,
-      employeeId: sheet.employeeId,
-      thrustArea,
-      title,
-      description: description || "",
-      uomType,
-      targetValue: targetValue || null,
-      targetDate: targetDate || null,
-      weightage,
-    });
+  goalSheetId,
+  employeeId: sheet.employeeId,
+  thrustArea,
+  title,
+  description: description || "",
+  uomType,
+  targetValue: targetValue || null,
+  targetDate: targetDate || null,
+  weightage,
+});
+
+// Log goal creation
+await AuditLog.create({
+  entityType: "GOAL",
+  entityId: goal._id.toString(),
+  action: "CREATE",
+  before: null,
+  after: { title, thrustArea, uomType, targetValue, weightage },
+  actorUserId: req.user._id,
+  timestamp: new Date()
+});
+
+res.status(201).json(goal);
 
     res.status(201).json(goal);
   } catch (err) {
@@ -88,6 +101,15 @@ export const updateGoal = async (req, res) => {
       return res.status(400).json({ message: "Can only edit draft goal sheets" });
     }
 
+    // Capture old values
+    const oldValues = {
+      title: goal.title,
+      thrustArea: goal.thrustArea,
+      uomType: goal.uomType,
+      targetValue: goal.targetValue,
+      weightage: goal.weightage
+    };
+
     if (thrustArea) goal.thrustArea = thrustArea;
     if (title) goal.title = title;
     if (description !== undefined) goal.description = description;
@@ -97,6 +119,18 @@ export const updateGoal = async (req, res) => {
     if (weightage !== undefined) goal.weightage = weightage;
 
     await goal.save();
+
+    // Log goal update
+    await AuditLog.create({
+      entityType: "GOAL",
+      entityId: goalId,
+      action: "UPDATE",
+      before: oldValues,
+      after: { title: goal.title, thrustArea: goal.thrustArea, uomType: goal.uomType, targetValue: goal.targetValue, weightage: goal.weightage },
+      actorUserId: req.user._id,
+      timestamp: new Date()
+    });
+
     res.json(goal);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -115,6 +149,17 @@ export const deleteGoal = async (req, res) => {
     if (sheet.status !== "DRAFT") {
       return res.status(400).json({ message: "Can only edit draft goal sheets" });
     }
+
+    // Log deletion
+    await AuditLog.create({
+      entityType: "GOAL",
+      entityId: goalId,
+      action: "DELETE",
+      before: { title: goal.title, thrustArea: goal.thrustArea, weightage: goal.weightage },
+      after: null,
+      actorUserId: req.user._id,
+      timestamp: new Date()
+    });
 
     await Goal.deleteOne({ _id: goalId });
     res.json({ message: "Goal deleted" });
@@ -160,8 +205,20 @@ export const submitGoalSheet = async (req, res) => {
     }
 
     sheet.status = "SUBMITTED";
-    sheet.submittedAt = new Date();
-    await sheet.save();
+sheet.submittedAt = new Date();
+await sheet.save();
+
+// Log goal sheet submission
+await AuditLog.create({
+  entityType: "GOAL_SHEET",
+  entityId: sheet._id.toString(),
+  action: "UPDATE",
+  before: { status: "DRAFT" },
+  after: { status: "SUBMITTED" },
+  actorUserId: req.user._id,
+  timestamp: new Date()
+});
+
 
     res.json({ message: "Goal sheet submitted successfully", sheet, goals });
   } catch (err) {
@@ -286,6 +343,30 @@ export const getQuarterlyUpdates = async (req, res) => {
       .populate("goalId", "title thrustArea weightage");
 
     res.json(updates);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// Get all goals for current employee
+export const getEmployeeGoals = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+    const { year } = req.query;
+    const currentYear = year ? parseInt(year) : new Date().getFullYear();
+
+    const goalSheet = await GoalSheet.findOne({
+      employeeId,
+      year: currentYear,
+    });
+
+    if (!goalSheet) {
+      return res.json([]);
+    }
+
+    const goals = await Goal.find({ goalSheetId: goalSheet._id }).sort({ createdAt: 1 });
+    res.json(goals);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

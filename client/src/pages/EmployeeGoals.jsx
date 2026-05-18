@@ -15,7 +15,9 @@ export default function EmployeeGoals() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [adjustingWeightage, setAdjustingWeightage] = useState(null);
+  const [editingAchievement, setEditingAchievement] = useState(null);
   const [adjustValues, setAdjustValues] = useState({});
+  const [achievementValues, setAchievementValues] = useState({});
 
   const [formData, setFormData] = useState({
     thrustArea: THRUST_AREAS[0],
@@ -26,9 +28,9 @@ export default function EmployeeGoals() {
     targetDate: "",
     weightage: "",
   });
-  const currentYear = new Date().getFullYear();
-const [selectedYear, setSelectedYear] = useState(currentYear);
 
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const [touched, setTouched] = useState({});
 
   // Fetch goal sheet on mount
@@ -51,12 +53,18 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
       
       // Initialize adjustment values for shared goals
       const adjustInit = {};
+      const achieveInit = {};
       data.goals.forEach(g => {
         if (g.sharedRole === "RECIPIENT") {
           adjustInit[g._id] = g.adjustedWeightage || g.baseWeightage || g.weightage;
         }
+        achieveInit[g._id] = {
+          actualAchievement: g.actualAchievement || "",
+          achievementStatus: g.achievementStatus || "NOT_STARTED"
+        };
       });
       setAdjustValues(adjustInit);
+      setAchievementValues(achieveInit);
       
       setError("");
     } catch (err) {
@@ -141,6 +149,13 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
 
         const newGoal = await res.json();
         setGoals((prev) => [...prev, newGoal]);
+        setAchievementValues((prev) => ({
+          ...prev,
+          [newGoal._id]: {
+            actualAchievement: "",
+            achievementStatus: "NOT_STARTED"
+          }
+        }));
         setSuccess("✓ Goal created");
       }
 
@@ -240,6 +255,36 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
     }
   }
 
+  // Handle save achievement
+  async function handleSaveAchievement(goalId) {
+    try {
+      const data = achievementValues[goalId];
+      if (!data.actualAchievement || !data.achievementStatus) {
+        setError("Please fill in all achievement fields");
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/reports/goals/${goalId}/achievement`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          actualAchievement: parseFloat(data.actualAchievement),
+          achievementStatus: data.achievementStatus
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save achievement");
+
+      setSuccess("✅ Achievement saved successfully!");
+      setEditingAchievement(null);
+      fetchGoalSheet();
+      setTimeout(() => setSuccess(""), 2500);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   // Handle submit sheet
   async function handleSubmitSheet() {
     if (!canSubmitSheet) {
@@ -272,6 +317,24 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
     }
   }
 
+  function calculateAchievementPercent(goal) {
+    if (!goal.targetValue || !achievementValues[goal._id]?.actualAchievement) return 0;
+    return ((achievementValues[goal._id].actualAchievement / goal.targetValue) * 100).toFixed(1);
+  }
+
+  function getStatusColor(status) {
+    switch (status) {
+      case "COMPLETED":
+        return "#10b981";
+      case "IN_PROGRESS":
+        return "#3b82f6";
+      case "EXCEEDED":
+        return "#8b5cf6";
+      default:
+        return "#64748b";
+    }
+  }
+
   if (loading && !sheet) {
     return (
       <div className="page">
@@ -288,54 +351,54 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
     <div className="page">
       <div className="card">
         <div className="section-header">
-  <div>
-    <h2>My Goals - {sheet?.year}</h2>
-    <p className="subtle">
-      Status: <span className={`badge badge--${sheet?.status.toLowerCase()}`}>{sheet?.status}</span>
-    </p>
-  </div>
-  
-  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-    <div>
-      <label htmlFor="year-select" style={{ marginRight: "0.5rem", color: "#9ca3af" }}>Year:</label>
-      <select 
-        id="year-select"
-        value={selectedYear} 
-        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-        className="year-selector"
-      >
-        {[currentYear - 1, currentYear, currentYear + 1].map(y => (
-          <option key={y} value={y}>{y}</option>
-        ))}
-      </select>
-    </div>
+          <div>
+            <h2>My Goals - {sheet?.year}</h2>
+            <p className="subtle">
+              Status: <span className={`badge badge--${sheet?.status.toLowerCase()}`}>{sheet?.status}</span>
+            </p>
+          </div>
+          
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <div>
+              <label htmlFor="year-select" style={{ marginRight: "0.5rem", color: "#9ca3af" }}>Year:</label>
+              <select 
+                id="year-select"
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="year-selector"
+              >
+                {[currentYear - 1, currentYear, currentYear + 1].map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
 
-    {!isLocked && (
-      <button
-        className="btn btn--primary"
-        onClick={() => {
-          if (!showForm) {
-            setFormData({
-              thrustArea: THRUST_AREAS[0],
-              title: "",
-              description: "",
-              uomType: UOM_TYPES[0],
-              targetValue: "",
-              targetDate: "",
-              weightage: "",
-            });
-            setEditing(null);
-            setTouched({});
-          }
-          setShowForm(!showForm);
-          setError("");
-        }}
-      >
-        {showForm ? "Cancel" : "+ Add Goal"}
-      </button>
-    )}
-  </div>
-</div>
+            {!isLocked && (
+              <button
+                className="btn btn--primary"
+                onClick={() => {
+                  if (!showForm) {
+                    setFormData({
+                      thrustArea: THRUST_AREAS[0],
+                      title: "",
+                      description: "",
+                      uomType: UOM_TYPES[0],
+                      targetValue: "",
+                      targetDate: "",
+                      weightage: "",
+                    });
+                    setEditing(null);
+                    setTouched({});
+                  }
+                  setShowForm(!showForm);
+                  setError("");
+                }}
+              >
+                {showForm ? "Cancel" : "+ Add Goal"}
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Form */}
         {showForm && !isLocked && (
@@ -491,6 +554,7 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
               {goals.map((goal) => {
                 const isShared = goal.sharedGroupId;
                 const isRecipient = goal.sharedRole === "RECIPIENT";
+                const achievePercent = calculateAchievementPercent(goal);
 
                 return (
                   <div key={goal._id} className={`goal-card ${isShared ? "goal-card--shared" : ""}`}>
@@ -549,6 +613,91 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
                     </div>
 
                     {goal.description && <p className="subtle">{goal.description}</p>}
+
+                    {/* Achievement Section */}
+                    <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(148, 163, 184, 0.1)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                        <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#cbd5e1" }}>Achievement</span>
+                        <span style={{ color: "#a5b4fc", fontSize: "0.9rem" }}>
+                          {achievementValues[goal._id]?.actualAchievement || "—"} / {goal.targetValue} ({achievePercent}%)
+                        </span>
+                      </div>
+                      <div className="progress-bar" style={{ marginBottom: "0.75rem" }}>
+                        <div 
+                          className="progress-fill"
+                          style={{ width: `${achievePercent}%` }}
+                        />
+                      </div>
+                      {editingAchievement === goal._id ? (
+                        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                          <input
+                            type="number"
+                            placeholder="Actual value"
+                            value={achievementValues[goal._id]?.actualAchievement || ""}
+                            onChange={(e) => setAchievementValues({
+                              ...achievementValues,
+                              [goal._id]: {
+                                ...achievementValues[goal._id],
+                                actualAchievement: e.target.value
+                              }
+                            })}
+                            style={{
+                              flex: 1,
+                              minWidth: "120px",
+                              padding: "0.5rem",
+                              background: "#0a0e27",
+                              border: "1px solid #374151",
+                              borderRadius: "4px",
+                              color: "#e5e7eb",
+                            }}
+                          />
+                          <select
+                            value={achievementValues[goal._id]?.achievementStatus || "NOT_STARTED"}
+                            onChange={(e) => setAchievementValues({
+                              ...achievementValues,
+                              [goal._id]: {
+                                ...achievementValues[goal._id],
+                                achievementStatus: e.target.value
+                              }
+                            })}
+                            style={{
+                              flex: 1,
+                              minWidth: "140px",
+                              padding: "0.5rem",
+                              background: "#0a0e27",
+                              border: "1px solid #374151",
+                              borderRadius: "4px",
+                              color: "#e5e7eb",
+                            }}
+                          >
+                            <option value="NOT_STARTED">Not Started</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="EXCEEDED">Exceeded</option>
+                          </select>
+                          <button
+                            className="btn btn--primary btn--xs"
+                            onClick={() => handleSaveAchievement(goal._id)}
+                            disabled={loading}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="btn btn--ghost btn--xs"
+                            onClick={() => setEditingAchievement(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="btn btn--ghost btn--sm"
+                          onClick={() => setEditingAchievement(goal._id)}
+                        >
+                          📊 Update Achievement
+                        </button>
+                      )}
+                    </div>
 
                     <div className="goal-actions">
                       {!isLocked && !isShared && (
@@ -629,6 +778,20 @@ const [selectedYear, setSelectedYear] = useState(currentYear);
         .btn--xs {
           padding: 0.25rem 0.5rem;
           font-size: 0.75rem;
+        }
+
+        .progress-bar {
+          height: 12px;
+          background: rgba(30, 41, 59, 0.6);
+          border-radius: 20px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #3b82f6, #6366f1);
+          border-radius: 20px;
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
       `}</style>
     </div>

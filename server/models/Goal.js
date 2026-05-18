@@ -16,7 +16,9 @@ const goalSchema = new mongoose.Schema(
 
     targetValue: { type: Number, default: null },
     targetDate: { type: Date, default: null },
-
+actualAchievement: { type: Number, default: null }, // Actual value achieved by employee
+achievementDate: { type: Date, default: null }, // When achievement was recorded
+achievementStatus: { type: String, enum: ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "EXCEEDED"], default: "NOT_STARTED" },
     weightage: { type: Number, required: true, min: 0, max: 100 },
 
     // Shared goal tracking

@@ -11,6 +11,7 @@ import {
   submitGoalUpdate,
   getGoalUpdates,
   getQuarterlyUpdates,
+  getEmployeeGoals,
 } from "../controller/employeeController.js";
 import * as sharedGoalsController from "../controller/sharedGoalsController.js";
 
@@ -28,6 +29,6 @@ router.post("/goals/:goalId/update", submitGoalUpdate);
 router.get("/goals/:goalId/updates", getGoalUpdates);
 router.get("/updates/quarterly", getQuarterlyUpdates);
 router.put("/goals/:goalId/adjust-weightage", requireAuth, requireRole("EMPLOYEE"), sharedGoalsController.adjustSharedGoalWeightage);
-
+router.get("/goals", requireAuth ,getEmployeeGoals);
 
 export default router;
