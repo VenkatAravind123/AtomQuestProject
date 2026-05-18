@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import config from "../config.js";
+import { MdDelete } from "react-icons/md";
 const API_URL = config.API_URL;
 
 export default function AdminUsers() {
@@ -228,7 +229,7 @@ export default function AdminUsers() {
                         onClick={() => deleteUser(user._id)}
                         title="Delete user"
                       >
-                        🗑️
+                        <MdDelete />
                       </button>
                     </td>
                   </tr>
@@ -413,7 +414,10 @@ export default function AdminUsers() {
 
         .admin-users-page {
           width: 100%;
-          max-width: 1400px;
+          max-width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: flex-start;
         }
 
         /* Banners */

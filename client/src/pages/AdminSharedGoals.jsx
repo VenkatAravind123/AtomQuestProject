@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import config from "../config.js";
+import { MdDelete } from "react-icons/md";
 const API_URL = config.API_URL;
 const ROLES = ["EMPLOYEE", "MANAGER", "ADMIN"];
 const UOM_TYPES = ["MIN", "MAX", "TIMELINE", "ZERO"];
@@ -542,7 +543,7 @@ export default function AdminSharedGoals() {
                         onClick={() => handleDeleteGroup(group._id)}
                         title="Delete Group"
                       >
-                        🗑️
+                        <MdDelete />
                       </button>
                     </div>
                   )}

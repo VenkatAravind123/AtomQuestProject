@@ -105,7 +105,7 @@ export default function AdminReports() {
 
   return (
     <div className="page admin-reports-page">
-      <div className="card">
+      <div className="glass-card">
         {/* Header */}
         <div className="reports-header">
           <div>
@@ -151,19 +151,11 @@ export default function AdminReports() {
                 <p className="subtle">Export planned vs actual achievements (CSV)</p>
                 
                 <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}>
-                  <label style={{ fontSize: "0.9rem", color: "#cbd5e1" }}>Select Year:</label>
+                  <label className="float-label" style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Select Year:</label>
                   <select 
                     value={year}
                     onChange={(e) => setYear(parseInt(e.target.value))}
-                    style={{
-                      width: "100%",
-                      padding: "0.5rem",
-                      marginTop: "0.5rem",
-                      background: "#0a0e27",
-                      border: "1px solid #374151",
-                      borderRadius: "6px",
-                      color: "#e5e7eb",
-                    }}
+                    className="modern-select"
                   >
                     {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -172,7 +164,7 @@ export default function AdminReports() {
                 </div>
 
                 <button 
-                  className="btn btn--primary btn--full"
+                  className="btn btn--primary btn--full glow-effect"
                   onClick={handleDownloadCSV}
                   disabled={loading}
                 >
@@ -187,7 +179,7 @@ export default function AdminReports() {
                 <p className="subtle">Real-time view of goal sheet submissions and check-ins</p>
                 
                 <button 
-                  className="btn btn--primary btn--full"
+                  className="btn btn--primary btn--full glow-effect"
                   onClick={fetchCompletionDashboard}
                   disabled={loading}
                   style={{ marginTop: "2rem" }}
@@ -203,7 +195,7 @@ export default function AdminReports() {
                 <p className="subtle">Track all system changes and activity logs</p>
                 
                 <button 
-                  className="btn btn--primary btn--full"
+                  className="btn btn--primary btn--full glow-effect"
                   onClick={fetchAuditLogs}
                   disabled={loading}
                   style={{ marginTop: "2rem" }}
@@ -297,7 +289,7 @@ export default function AdminReports() {
             <h3>Audit Trail</h3>
             
             {/* Filter */}
-            <div style={{ marginBottom: "1.5rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <div className="filter-group">
               {["ALL", "GOAL", "GOAL_SHEET", "CHECKIN", "SHARED_GOAL"].map(type => (
                 <button
                   key={type}
@@ -369,23 +361,44 @@ export default function AdminReports() {
       </div>
 
       <style>{`
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         .admin-reports-page {
-          max-width: 1400px;
+          width: 100%;
+          max-width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: flex-start;
+        }
+
+        .glass-card {
+          background: rgba(15, 23, 42, 0.6);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 2.5rem;
+          width: 100%;
+          animation: slideInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .reports-header {
           margin-bottom: 2.5rem;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
           padding-bottom: 1.5rem;
         }
 
         .reports-header h2 {
           margin: 0 0 0.5rem 0;
-          font-size: 2rem;
+          font-size: 2.2rem;
           font-weight: 800;
           background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          letter-spacing: -0.02em;
         }
 
         .banner {
@@ -396,6 +409,8 @@ export default function AdminReports() {
           align-items: center;
           gap: 0.75rem;
           font-weight: 500;
+          animation: slideInDown 0.3s ease-out;
+          backdrop-filter: blur(8px);
         }
 
         .banner-icon {
@@ -410,324 +425,262 @@ export default function AdminReports() {
         }
 
         .success-banner {
-          background: rgba(16, 185, 129, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          color: #34d399;
+          background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399;
         }
-
-        .success-banner .banner-icon {
-          background: rgba(16, 185, 129, 0.2);
-          color: #10b981;
-        }
+        .success-banner .banner-icon { background: rgba(16, 185, 129, 0.2); color: #10b981; }
 
         .error-banner {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          color: #f87171;
+          background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171;
         }
-
-        .error-banner .banner-icon {
-          background: rgba(239, 68, 68, 0.2);
-          color: #ef4444;
-        }
+        .error-banner .banner-icon { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
         .reports-tabs {
           display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+          gap: 0.5rem;
+          margin-bottom: 2.5rem;
+          background: rgba(15, 23, 42, 0.5);
+          padding: 0.5rem;
+          border-radius: 16px;
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          width: fit-content;
         }
 
         .tab-button {
-          padding: 1rem 1.5rem;
+          padding: 0.875rem 1.5rem;
           background: transparent;
           border: none;
-          border-bottom: 2px solid transparent;
+          border-radius: 12px;
           color: #94a3b8;
           font-weight: 600;
+          font-size: 0.95rem;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .tab-button:hover {
-          color: #cbd5e1;
+          color: #f8fafc;
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .tab-button.active {
-          color: #6366f1;
-          border-bottom-color: #6366f1;
+          color: #fff;
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
         .tab-content {
-          animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          animation: slideIn 0.4s ease-out;
         }
 
         .reports-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: 1.5rem;
         }
 
         .report-card {
-          background: rgba(30, 41, 59, 0.5);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          border-radius: 16px;
+          background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
           padding: 2rem;
-          transition: all 0.3s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          flex-direction: column;
         }
 
         .report-card:hover {
-          border-color: rgba(99, 102, 241, 0.5);
-          background: rgba(30, 41, 59, 0.8);
+          transform: translateY(-5px);
+          border-color: rgba(99, 102, 241, 0.3);
+          box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.1);
         }
 
         .report-icon {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
+          font-size: 3rem;
+          margin-bottom: 1.25rem;
+          filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
         }
 
         .report-card h4 {
           margin: 0 0 0.5rem 0;
           color: #f8fafc;
           font-size: 1.25rem;
+          font-weight: 700;
         }
 
         .report-card .subtle {
           margin: 0;
         }
 
-        .btn {
-          padding: 0.75rem 1.5rem;
+        .modern-select {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          background: rgba(15, 23, 42, 0.5);
           border: 1px solid rgba(148, 163, 184, 0.2);
-          border-radius: 8px;
-          background: rgba(30, 41, 59, 0.5);
-          color: #cbd5e1;
-          font-weight: 500;
+          border-radius: 12px;
+          color: #f8fafc;
+          font-size: 0.95rem;
+          outline: none;
+          transition: all 0.3s;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/200.svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 1rem center;
+          background-size: 1.2em;
+        }
+        .modern-select:focus { border-color: #6366f1; background: rgba(30, 41, 59, 0.8); }
+
+        .btn {
+          padding: 0.875rem 1.5rem;
+          border: none;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.95rem;
           cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn:hover:not(:disabled) {
-          background: rgba(99, 102, 241, 0.2);
-          border-color: #6366f1;
-        }
-
-        .btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn--primary {
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
           color: white;
-          border: none;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+          box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+          margin-top: auto;
         }
 
         .btn--primary:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5);
         }
 
-        .btn--full {
-          width: 100%;
+        .glow-effect { position: relative; overflow: hidden; }
+        .glow-effect::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899, #6366f1); z-index: -1; filter: blur(10px); opacity: 0; transition: opacity 0.3s; }
+        .glow-effect:hover:not(:disabled)::before { opacity: 1; }
+
+        .btn--full { width: 100%; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        /* Completion Dashboard */
+        .tab-content h3 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin: 0 0 1.5rem 0;
+          color: #e2e8f0;
         }
 
         .metrics-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 1rem;
-          margin: 1.5rem 0;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2.5rem;
         }
 
         .metric-card {
-          background: rgba(99, 102, 241, 0.05);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          border-radius: 12px;
-          padding: 1.5rem;
+          background: rgba(30, 41, 59, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          padding: 2rem 1.5rem;
           text-align: center;
+          transition: all 0.3s;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .metric-card:hover {
+          background: rgba(30, 41, 59, 0.6);
+          border-color: rgba(255, 255, 255, 0.1);
         }
 
         .metric-value {
-          font-size: 2.5rem;
+          font-size: 3rem;
           font-weight: 800;
-          color: #e2e8f0;
+          color: #f8fafc;
           margin-bottom: 0.5rem;
+          line-height: 1;
         }
 
         .metric-label {
           color: #94a3b8;
-          font-size: 0.9rem;
-          font-weight: 500;
-        }
-
-        .section {
-          margin-top: 2rem;
-          padding-top: 2rem;
-          border-top: 1px solid rgba(148, 163, 184, 0.1);
-        }
-
-        .section h4 {
-          margin: 0 0 1rem 0;
-          color: #e2e8f0;
-        }
-
-        .status-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .status-row {
-          display: grid;
-          grid-template-columns: 120px 1fr 60px;
-          gap: 1rem;
-          align-items: center;
-        }
-
-        .status-label {
-          color: #cbd5e1;
-          font-weight: 500;
-        }
-
-        .status-bar-container {
-          height: 12px;
-          background: rgba(30, 41, 59, 0.6);
-          border-radius: 20px;
-          overflow: hidden;
-        }
-
-        .status-bar {
-          height: 100%;
-          border-radius: 20px;
-          transition: width 0.5s ease;
-        }
-
-        .status-count {
-          color: #94a3b8;
-          text-align: right;
-        }
-
-        .progress-bar-full {
-          height: 16px;
-          background: rgba(30, 41, 59, 0.6);
-          border-radius: 20px;
-          overflow: hidden;
-        }
-
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #3b82f6, #6366f1);
-          transition: width 0.5s ease;
-        }
-
-        .filter-btn {
-          padding: 0.5rem 1rem;
-          background: rgba(30, 41, 59, 0.5);
-          border: 1px solid rgba(148, 163, 184, 0.2);
-          border-radius: 8px;
-          color: #cbd5e1;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-size: 0.9rem;
-          font-weight: 500;
-        }
-
-        .filter-btn:hover {
-          border-color: #6366f1;
-        }
-
-        .filter-btn.active {
-          background: #6366f1;
-          color: white;
-          border-color: #6366f1;
-        }
-
-        .logs-container {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          max-height: 600px;
-          overflow-y: auto;
-        }
-
-        .log-entry {
-          background: rgba(30, 41, 59, 0.4);
-          border: 1px solid rgba(148, 163, 184, 0.1);
-          border-radius: 8px;
-          padding: 1rem;
-        }
-
-        .log-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .log-entity {
-          display: inline-block;
-          padding: 0.35rem 0.75rem;
-          border-radius: 6px;
-          color: white;
-          font-size: 0.75rem;
+          font-size: 0.95rem;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
 
-        .log-action {
-          color: #a5b4fc;
-          font-weight: 500;
+        .section {
+          background: rgba(15, 23, 42, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          padding: 2rem;
+          margin-bottom: 1.5rem;
         }
 
-        .log-time {
-          color: #94a3b8;
-          font-size: 0.85rem;
-          margin-left: auto;
+        .section h4 {
+          margin: 0 0 1.5rem 0;
+          color: #e2e8f0;
+          font-size: 1.25rem;
         }
 
-        .log-details {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
+        .status-list { display: flex; flex-direction: column; gap: 1.25rem; }
+        .status-row { display: grid; grid-template-columns: 120px 1fr 60px; gap: 1.5rem; align-items: center; }
+        .status-label { color: #cbd5e1; font-weight: 600; font-size: 0.9rem; }
+        .status-bar-container { height: 16px; background: rgba(15, 23, 42, 0.6); border-radius: 20px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .status-bar { height: 100%; border-radius: 20px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .status-count { color: #f8fafc; text-align: right; font-weight: 700; font-size: 1.1rem; }
+
+        .progress-bar-full { height: 24px; background: rgba(15, 23, 42, 0.6); border-radius: 20px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899); background-size: 200% 100%; animation: shimmer 3s infinite linear; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+        /* Audit Logs */
+        .filter-group {
+          display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem;
         }
 
-        .detail-row {
-          display: flex;
-          gap: 0.75rem;
-        }
-
-        .detail-label {
-          color: #94a3b8;
-          font-weight: 500;
-          min-width: 80px;
-        }
-
-        .detail-value {
+        .filter-btn {
+          padding: 0.6rem 1.25rem;
+          background: rgba(30, 41, 59, 0.5);
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 10px;
           color: #cbd5e1;
-          flex: 1;
-          word-break: break-all;
-        }
-
-        code {
-          background: rgba(0, 0, 0, 0.3);
-          padding: 0.5rem;
-          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.2s;
           font-size: 0.85rem;
-          font-family: monospace;
+          font-weight: 600;
         }
 
-        .empty-state {
-          text-align: center;
-          padding: 3rem 1.5rem;
-          color: #94a3b8;
+        .filter-btn:hover { border-color: rgba(99, 102, 241, 0.5); background: rgba(99, 102, 241, 0.1); }
+        .filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+
+        .logs-container { display: flex; flex-direction: column; gap: 1rem; max-height: 600px; overflow-y: auto; padding-right: 0.5rem; }
+        .logs-container::-webkit-scrollbar { width: 6px; }
+        .logs-container::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 4px; }
+        .logs-container::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 4px; }
+
+        .log-entry {
+          background: rgba(30, 41, 59, 0.4);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          border-left: 4px solid #6366f1;
+          border-radius: 12px;
+          padding: 1.25rem;
+          transition: all 0.2s;
         }
+        .log-entry:hover { background: rgba(30, 41, 59, 0.6); }
+
+        .log-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .log-entity { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .log-action { color: #f8fafc; font-weight: 600; font-size: 0.95rem; }
+        .log-time { color: #94a3b8; font-size: 0.85rem; margin-left: auto; background: rgba(15, 23, 42, 0.5); padding: 0.3rem 0.7rem; border-radius: 8px; }
+
+        .log-details { display: flex; flex-direction: column; gap: 0.75rem; background: rgba(15, 23, 42, 0.3); padding: 1rem; border-radius: 8px; }
+        .detail-row { display: flex; gap: 1rem; align-items: flex-start; }
+        .detail-label { color: #94a3b8; font-weight: 600; font-size: 0.85rem; min-width: 80px; padding-top: 0.2rem; }
+        .detail-value { color: #e2e8f0; flex: 1; font-size: 0.9rem; word-break: break-all; }
+
+        code { background: rgba(15, 23, 42, 0.6); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-family: 'Fira Code', monospace; display: block; overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.05); }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; background: rgba(30, 41, 59, 0.3); border-radius: 20px; border: 1px dashed rgba(148, 163, 184, 0.2); }
+        .empty-state p { font-size: 1.1rem; color: #cbd5e1; font-weight: 500; }
       `}</style>
     </div>
   );

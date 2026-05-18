@@ -582,6 +582,7 @@ select option {
 .layout-main {
   flex: 1;
   overflow-y: auto;
+  margin-left: 260px;
 }
 
 /* Sidebar */
@@ -784,6 +785,7 @@ select option {
 
   .layout-main {
     margin-top: 0;
+    margin-left: 0;
   }
 
   .page {

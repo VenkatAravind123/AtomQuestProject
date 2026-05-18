@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-const ENTITY_TYPES = ["GOAL", "GOAL_SHEET", "CYCLE", "SHARED_GOAL", "GOAL_UPDATE", "CHECKIN"];
+const ENTITY_TYPES = ["GOAL", "GOAL_SHEET", "CYCLE", "SHARED_GOAL", "GOAL_UPDATE", "CHECKIN","USER"];
 
 const auditLogSchema = new mongoose.Schema(
   {
