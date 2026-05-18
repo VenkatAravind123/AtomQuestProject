@@ -133,7 +133,7 @@ export default function Login() {
                   onClick={() => setShowPassword((v) => !v)}
                   title={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <FaEye />: <FaEyeSlash />}
+                  {showPassword ? <FaEyeSlash />: <FaEye />}
                 </button>
                 <div className="focus-border"></div>
               </div>
